@@ -2,7 +2,7 @@
 <html lang="tr" dir="ltr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=10.0, user-scalable=yes, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#090d16">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1425,69 +1425,64 @@ async function reRoute() {
 }
 
 // ════════════════ MOBILE TOUCH & PINCH-ZOOM GESTURES ════════════════
-const pzEventsHandler = {
-  haltEventListeners: ['touchstart', 'touchend', 'touchmove', 'touchleave', 'touchcancel'],
-  init: function(options) {
-    const instance = options.svgPanZoomElement;
-    let initialScale = 1;
-    let pannedX = 0;
-    let pannedY = 0;
+function setupNativeTouchGestures(svg) {
+  let initialPinchDist = null;
+  let initialPinchZoom = 1;
+  let touchStartX = 0, touchStartY = 0, touchStartTime = 0;
 
-    if (window.Hammer) {
-      this.hammer = Hammer(options.svgElement, {
-        inputClass: Hammer.SUPPORT_POINTER_EVENTS ? Hammer.PointerEventInput : Hammer.TouchInput
-      });
-
-      this.hammer.get('pinch').set({ enable: true });
-
-      this.hammer.on('doubletap', function(ev) {
-        instance.zoomIn();
-      });
-
-      this.hammer.on('panstart panmove', function(ev) {
-        if (ev.type === 'panstart') {
-          pannedX = 0;
-          pannedY = 0;
-        }
-        instance.panBy({ x: ev.deltaX - pannedX, y: ev.deltaY - pannedY });
-        pannedX = ev.deltaX;
-        pannedY = ev.deltaY;
-      });
-
-      this.hammer.on('pinchstart pinchmove', function(ev) {
-        if (ev.type === 'pinchstart') {
-          initialScale = instance.getZoom();
-          instance.zoomAtPoint(initialScale * ev.scale, { x: ev.center.x, y: ev.center.y });
-        }
-        instance.zoomAtPoint(initialScale * ev.scale, { x: ev.center.x, y: ev.center.y });
-      });
+  // 2-Finger Touch Pinch Zoom Start
+  svg.addEventListener('touchstart', function(e) {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      const t1 = e.touches[0];
+      const t2 = e.touches[1];
+      initialPinchDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+      if (pzInstance) {
+        initialPinchZoom = pzInstance.getZoom();
+      }
+    } else if (e.touches.length === 1) {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      touchStartTime = Date.now();
     }
-  },
-  destroy: function() {
-    if (this.hammer) this.hammer.destroy();
-  }
-};
+  }, { passive: false });
 
-// Mobile Touch Tap Delegate for elements inside SVG (Campy stairs transition & Classroom selection)
-function setupSvgTouchTapDelegate(svg) {
-  let startX = 0, startY = 0, startTime = 0;
-
-  svg.addEventListener('pointerdown', function(e) {
-    startX = e.clientX;
-    startY = e.clientY;
-    startTime = Date.now();
-  }, { passive: true });
-
-  svg.addEventListener('pointerup', function(e) {
-    const dx = Math.abs(e.clientX - startX);
-    const dy = Math.abs(e.clientY - startY);
-    const duration = Date.now() - startTime;
-
-    // Quick tap gesture (small movement < 14px and quick duration < 350ms)
-    if (dx < 14 && dy < 14 && duration < 350) {
-      handleSvgElementTap(e.clientX, e.clientY);
+  // 2-Finger Touch Pinch Zoom Move
+  svg.addEventListener('touchmove', function(e) {
+    if (e.touches.length === 2 && initialPinchDist && pzInstance) {
+      e.preventDefault();
+      const t1 = e.touches[0];
+      const t2 = e.touches[1];
+      const currentDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+      if (initialPinchDist > 0) {
+        const scale = currentDist / initialPinchDist;
+        const targetZoom = Math.max(0.4, Math.min(8, initialPinchZoom * scale));
+        const midX = (t1.clientX + t2.clientX) / 2;
+        const midY = (t1.clientY + t2.clientY) / 2;
+        
+        pzInstance.zoomAtPoint(targetZoom, { x: midX, y: midY });
+      }
     }
-  });
+  }, { passive: false });
+
+  // Touch End: Reset Pinch & Detect Quick Tap
+  svg.addEventListener('touchend', function(e) {
+    if (e.touches.length < 2) {
+      initialPinchDist = null;
+    }
+    
+    // Quick single-finger tap detector (< 14px movement & < 350ms)
+    if (e.changedTouches && e.changedTouches.length === 1 && e.touches.length === 0) {
+      const touch = e.changedTouches[0];
+      const dx = Math.abs(touch.clientX - touchStartX);
+      const dy = Math.abs(touch.clientY - touchStartY);
+      const duration = Date.now() - touchStartTime;
+
+      if (dx < 14 && dy < 14 && duration < 350) {
+        handleSvgElementTap(touch.clientX, touch.clientY);
+      }
+    }
+  }, { passive: false });
 }
 
 function handleSvgElementTap(x, y) {
@@ -1551,10 +1546,10 @@ function showFloorMap(idx) {
   });
 
   container.insertBefore(svg, container.firstChild);
-  setupSvgTouchTapDelegate(svg);
+  setupNativeTouchGestures(svg);
   startMover(svg);
 
-  // Pan Zoom Init with Mobile Pinch-Zoom Support
+  // Pan Zoom Init
   setTimeout(() => {
     pzInstance = svgPanZoom('#route-svg', {
       zoomEnabled: true,
@@ -1562,8 +1557,7 @@ function showFloorMap(idx) {
       fit: true,
       center: true,
       minZoom: 0.4,
-      maxZoom: 8,
-      customEventsHandler: pzEventsHandler
+      maxZoom: 8
     });
     // Default: Zoom in close to Campy and path for immersive camera follow
     if (!isFullMapView) {
