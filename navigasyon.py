@@ -406,9 +406,18 @@ def rota(hedef_ad, baslangic_ad="START_POINT", tercih="MERDIVEN"):
     gecis_en = "elevator" if gecis_tipi == "elevator" else "stairs"
     gecis_ar = "المصعد" if gecis_tipi == "elevator" else "الدرج"
     
-    hedef_kat_str_tr = "zemin kata" if hedef_kat == "zemin" else f"{hedef_kat.replace('kat', '')}. kata"
-    hedef_kat_str_en = "ground floor" if hedef_kat == "zemin" else f"{hedef_kat.replace('kat', '')} floor"
-    hedef_kat_str_ar = "الطابق الأرضي" if hedef_kat == "zemin" else f"الطابق {hedef_kat.replace('kat', '')}"
+    if hedef_kat == "zemin":
+        hedef_kat_str_tr, hedef_kat_str_en, hedef_kat_str_ar = "zemin kata", "ground floor", "الطابق الأرضي"
+    elif "-" in hedef_kat:
+        num = hedef_kat.replace("kat-", "")
+        hedef_kat_str_tr = f"Bodrum -{num} katına"
+        hedef_kat_str_en = f"Basement -{num} floor"
+        hedef_kat_str_ar = f"طابق البدروم {num}-"
+    else:
+        num = hedef_kat.replace("kat", "")
+        hedef_kat_str_tr = f"{num}. kata"
+        hedef_kat_str_en = f"{num} floor"
+        hedef_kat_str_ar = f"الطابق {num}"
     
     yon_1[-1] = {
         "icon": gecis_tipi,
@@ -441,5 +450,7 @@ def rota(hedef_ad, baslangic_ad="START_POINT", tercih="MERDIVEN"):
 def _kat_etiketi(kat):
     if kat == "zemin":
         return "Zemin kat"
+    if kat.startswith("kat-"):
+        return f"Bodrum {kat.replace('kat', '')}"
     m = re.match(r"kat(\d+)", kat)
     return f"{m.group(1)}. kat" if m else kat
