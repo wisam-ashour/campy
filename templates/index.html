@@ -50,21 +50,20 @@
   --radius-sm: 12px;
 }
 
-.union-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  color: #ffffff;
-  padding: 6px 16px;
-  border-radius: 99px;
-  font-size: 13px;
+.watermark-bg {
+  position: fixed;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  color: rgba(255, 255, 255, 0.22);
+  font-size: 13.5px;
   font-weight: 800;
-  margin: 0 auto 16px;
-  backdrop-filter: blur(12px);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
-  text-align: center;
+  pointer-events: none;
+  white-space: nowrap;
+  user-select: none;
+  font-family: var(--font-ar);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.65);
 }
 
 * {
@@ -764,12 +763,12 @@ html, body {
 </head>
 <body>
 
+<!-- Semi-transparent Watermark Branding across background -->
+<div class="watermark-bg" id="txt-watermark">رابطة الطلبة العرب — جامعة بيروني</div>
+
 <!-- ════════════════ SCREEN 1: WELCOME & LANGUAGE ════════════════ -->
 <div class="screen" id="s-lang">
   <div class="wizard-card" style="text-align: center">
-
-    <!-- Arab Student Association Union Badge -->
-    <div class="union-badge" id="txt-union-badge">🎓 رابطة الطلبة العرب — جامعة بيروني</div>
 
     <!-- Standalone Mascot Graphic -->
     <div class="mascot-hero-wrap" onclick="mascotSpeechClick()">
@@ -858,10 +857,6 @@ html, body {
 <div class="screen hide" id="s-dest">
   <div class="wizard-card">
 
-    <div style="text-align: center; margin-bottom: 12px;">
-      <div class="union-badge">🎓 رابطة الطلبة العرب — جامعة بيروني</div>
-    </div>
-
     <!-- Top Header Navigation with Small Campy Mascot on Top Left -->
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
       <!-- Animated Campy Mascot on Top Left -->
@@ -932,10 +927,6 @@ html, body {
 <!-- ════════════════ SCREEN 3: ORIGIN ("Neredesin?") ════════════════ -->
 <div class="screen hide" id="s-origin">
   <div class="wizard-card">
-
-    <div style="text-align: center; margin-bottom: 12px;">
-      <div class="union-badge">🎓 رابطة الطلبة العرب — جامعة بيروني</div>
-    </div>
 
     <!-- Top Header Navigation with Animated Campy Mascot on Top Left -->
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
@@ -1214,8 +1205,11 @@ function pickLang(l) {
 
 function applyLangToUI() {
   const t = T[lang];
-  const unionBadges = document.querySelectorAll('.union-badge, #txt-top-union');
-  unionBadges.forEach(b => { if (b) b.textContent = t.unionBadge; });
+  const watermark = document.getElementById('txt-watermark');
+  if (watermark) watermark.textContent = t.unionBadge;
+
+  const topUnion = document.getElementById('txt-top-union');
+  if (topUnion) topUnion.textContent = t.unionBadge;
 
   // Screen 2: Destination
   const destTitle = document.getElementById('dest-title');
@@ -1261,9 +1255,9 @@ function applyLangToUI() {
   const destChips = document.getElementById('dest-chips');
   if (destChips) {
     destChips.innerHTML = `
-      <div class="chip" onclick="quickDest('CAMİ')">${t.mosque}</div>
-      <div class="chip" onclick="quickDest('KIRTASİYE')">${t.stationery}</div>
-      <div class="chip" onclick="quickDest('ULUSLARARASI ÖĞRENCİ İŞLERİ')">${t.intlStudents}</div>
+      <div class="chip" onclick="quickDestByKeyword('CAMİ')">${t.mosque}</div>
+      <div class="chip" onclick="quickDestByKeyword('KIRTASİYE')">${t.stationery}</div>
+      <div class="chip" onclick="quickDestByKeyword('ULUSLARARASI')">${t.intlStudents}</div>
     `;
   }
 
@@ -1295,6 +1289,13 @@ function resetToHome() {
   document.getElementById('s-origin').classList.add('hide');
   document.getElementById('s-dest').classList.remove('hide');
   document.getElementById('s-lang').classList.add('hide');
+}
+
+function quickDestByKeyword(kw) {
+  const kwUpper = kw.toUpperCase();
+  const match = MEKANLAR.find(m => m.toUpperCase().includes(kwUpper)) || kw;
+  document.getElementById('inp-dest').value = match;
+  goToOrigin();
 }
 
 function quickDest(v) {
