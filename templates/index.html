@@ -743,6 +743,16 @@ html, body {
   font-weight: 900 !important;
   filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.9));
 }
+
+.app-footer-copyright {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.45);
+  margin-top: 22px;
+  letter-spacing: 0.2px;
+  font-family: system-ui, var(--font-main);
+}
 </style>
 </head>
 <body>
@@ -750,11 +760,6 @@ html, body {
 <!-- ════════════════ SCREEN 1: WELCOME & LANGUAGE ════════════════ -->
 <div class="screen" id="s-lang">
   <div class="wizard-card" style="text-align: center">
-
-    <!-- Arab Student Association Badge -->
-    <div style="display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.08); border:1.5px solid var(--card-border); color:var(--accent-cyan); padding:8px 18px; border-radius:99px; font-size:13px; font-weight:800; margin-bottom:14px; backdrop-filter:blur(10px);">
-      <span>🎓</span> <span class="union-badge-txt">رابطة الطلبة العرب - جامعة بيروني</span>
-    </div>
 
     <!-- Standalone Mascot Graphic -->
     <div class="mascot-hero-wrap" onclick="mascotSpeechClick()">
@@ -836,6 +841,9 @@ html, body {
       </button>
     </div>
 
+    <!-- Footer Copyright Branding Text (Matching User Reference) -->
+    <p class="app-footer-copyright"><span class="union-badge-txt">رابطة الطلبة العرب - جامعة بيروني</span> © 2026</p>
+
   </div>
 </div>
 
@@ -907,6 +915,9 @@ html, body {
       <span id="txt-btn-next">İleri</span>
     </button>
 
+    <!-- Footer Copyright Branding Text -->
+    <p class="app-footer-copyright"><span class="union-badge-txt">رابطة الطلبة العرب - جامعة بيروني</span> © 2026</p>
+
   </div>
 </div>
 
@@ -976,6 +987,9 @@ html, body {
     <button class="wizard-btn" id="btn-origin" onclick="startRoute()">
       <span id="txt-btn-start">Navigasyonu Başlat</span>
     </button>
+
+    <!-- Footer Copyright Branding Text -->
+    <p class="app-footer-copyright"><span class="union-badge-txt">رابطة الطلبة العرب - جامعة بيروني</span> © 2026</p>
 
   </div>
 </div>
