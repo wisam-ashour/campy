@@ -1070,9 +1070,10 @@ const T = {
     lblOrigin: "موقعك الحالي",
     destPlaceholder: "مثال: A120، B205، AZ05...",
     quickLabel: "الأماكن الأكثر زيارة",
+    roomA120: "🏫 القاعة A120",
+    roomA108: "🏫 القاعة A108",
+    roomA101: "🏫 القاعة A101",
     library: "📚 المكتبة",
-    cafeteria: "☕ الكافتيريا",
-    studentAff: "🎓 شؤون الطلاب",
     mainEntrance: "🚪 المدخل الرئيسي",
     startPoint: "🚪 المدخل الرئيسي",
     classrooms: "🏫 القاعات A120",
@@ -1106,9 +1107,10 @@ const T = {
     lblOrigin: "Şu Anki Konumun",
     destPlaceholder: "Örn: A120, B205, AZ05...",
     quickLabel: "Sık Kullanılan Mekanlar",
+    roomA120: "🏫 Derslik A120",
+    roomA108: "🏫 Derslik A108",
+    roomA101: "🏫 Derslik A101",
     library: "📚 Kütüphane",
-    cafeteria: "☕ Kafeterya",
-    studentAff: "🎓 Öğrenci İşleri",
     mainEntrance: "Ana Giriş",
     startPoint: "Ana Giriş",
     classrooms: "Derslik A120",
@@ -1142,9 +1144,10 @@ const T = {
     lblOrigin: "Your Current Location",
     destPlaceholder: "e.g. A120, B205, AZ05...",
     quickLabel: "Popular Spots",
+    roomA120: "🏫 Room A120",
+    roomA108: "🏫 Room A108",
+    roomA101: "🏫 Room A101",
     library: "📚 Library",
-    cafeteria: "☕ Cafeteria",
-    studentAff: "🎓 Student Affairs",
     mainEntrance: "Main Entrance",
     startPoint: "Main Entrance",
     classrooms: "Classroom A120",
@@ -1233,13 +1236,14 @@ function applyLangToUI() {
   const btnEdit = document.getElementById('btn-edit');
   if (btnEdit) btnEdit.textContent = t.reStart;
 
-  // Destination Quick Chips: Library, Cafeteria, Student Affairs
+  // Destination Quick Chips: Classroom codes and Library
   const destChips = document.getElementById('dest-chips');
   if (destChips) {
     destChips.innerHTML = `
+      <div class="chip" onclick="quickDest('A120')">${t.roomA120}</div>
+      <div class="chip" onclick="quickDest('A108')">${t.roomA108}</div>
+      <div class="chip" onclick="quickDest('A101')">${t.roomA101}</div>
       <div class="chip" onclick="quickDest('KÜTÜPHANE Z1')">${t.library}</div>
-      <div class="chip" onclick="quickDest('QR KAFE')">${t.cafeteria}</div>
-      <div class="chip" onclick="quickDest('ÖĞRENCİ İŞLERİ')">${t.studentAff}</div>
     `;
   }
 
