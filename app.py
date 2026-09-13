@@ -16,8 +16,11 @@ import navigasyon as nav
 # --- katları yükle (bir kez, başlangıçta) ---
 print("Kampüs planlari yukleniyor...")
 _z = nav.kat_yukle("zemin", "data/zemin.dxf")
-_k = nav.kat_yukle("kat1", "data/kat1.dxf")
-print(f"Zemin kat: {_z[0]} mekan | 1. kat: {_k[0]} mekan")
+_k1 = nav.kat_yukle("kat1", "data/kat1.dxf")
+_k2 = (0, 0)
+if os.path.exists("data/kat2.dxf"):
+    _k2 = nav.kat_yukle("kat2", "data/kat2.dxf")
+print(f"Zemin kat: {_z[0]} mekan | 1. kat: {_k1[0]} mekan | 2. kat: {_k2[0]} mekan")
 print(f"Toplam: {len(nav.tum_mekanlar())} mekan")
 
 app = Flask(__name__)
