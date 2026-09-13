@@ -1,0 +1,1911 @@
+<!DOCTYPE html>
+<html lang="tr" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#090d16">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Campy — Biruni İç Mekân Navigasyonu</title>
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+
+
+<style>
+/* ════════════════ DESIGN SYSTEM & CSS VARIABLES ════════════════ */
+:root {
+  --font-main: 'Plus Jakarta Sans', 'Cairo', system-ui, -apple-system, sans-serif;
+  --font-ar: 'Cairo', 'Plus Jakarta Sans', system-ui, sans-serif;
+
+  --bg-dark: #090d16;
+  --bg-dark-surface: #0e1626;
+  --card-bg: rgba(15, 23, 42, 0.94);
+  --card-border: rgba(255, 255, 255, 0.18);
+  --card-border-active: rgba(255, 255, 255, 0.7);
+
+  --accent-cyan: #ffffff;
+  --accent-cyan-glow: rgba(255, 255, 255, 0.1);
+  --accent-emerald: #ffffff;
+  --accent-emerald-glow: rgba(255, 255, 255, 0.1);
+  --accent-gradient: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+  --accent-gradient-hover: linear-gradient(135deg, #f1f5f9 0%, #94a3b8 100%);
+
+  --text-main: #ffffff;
+  --text-sub: #cbd5e1;
+  --text-muted: #64748b;
+
+  --danger: #ef4444;
+  --warning: #f59e0b;
+
+  --shadow-lg: 0 20px 45px rgba(0, 0, 0, 0.65);
+  --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.5);
+  --radius-lg: 28px;
+  --radius-md: 18px;
+  --radius-sm: 12px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-main);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  background-color: #0b1324;
+  /* Dark overlay filter for high contrast readability */
+  background-image: linear-gradient(rgba(11, 19, 36, 0.78), rgba(11, 19, 36, 0.78)), url('/static/img/university_doodle_bg_1789065077922.jpg');
+  background-size: 320px;
+  background-repeat: repeat;
+  background-attachment: fixed;
+  color: var(--text-main);
+  overflow: hidden;
+  position: relative;
+}
+
+/* RTL Support overrides */
+[dir="rtl"] {
+  font-family: var(--font-ar);
+}
+
+/* ════════════════ SCREENS & WIZARD ════════════════ */
+.screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 16px;
+  padding-bottom: max(20px, env(safe-area-inset-bottom));
+  z-index: 100;
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  background: transparent;
+  overflow-y: auto;
+}
+
+.screen.hide {
+  opacity: 0;
+  transform: scale(0.93) translateY(14px);
+  pointer-events: none;
+}
+
+/* Floating Card Container */
+.wizard-card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--card-bg);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1.5px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  padding: 32px 24px;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  z-index: 10;
+  animation: cardEntrance 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes cardEntrance {
+  from { opacity: 0; transform: translateY(20px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Frameless Floating Mascot (No Card Frame Around Robot) */
+.mascot-hero-wrap {
+  position: relative;
+  width: 135px;
+  height: 135px;
+  margin: 16px auto 16px;
+  cursor: pointer;
+  perspective: 800px;
+}
+
+.campy-mascot-svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 14px 24px rgba(0, 0, 0, 0.65));
+  animation: mascotFloat 4s ease-in-out infinite;
+  transition: transform 0.2s ease;
+}
+
+@keyframes mascotFloat {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(1.5deg); }
+}
+
+.mascot-speech-bubble {
+  position: absolute;
+  top: -36px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(14, 22, 38, 0.96);
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  color: var(--text-main);
+  padding: 6px 16px;
+  border-radius: 18px;
+  font-size: 13.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  z-index: 20;
+  animation: bubblePop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mascot-speech-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 6px 6px 0;
+  border-style: solid;
+  border-color: rgba(255, 255, 255, 0.85) transparent;
+}
+
+@keyframes bubblePop {
+  from { opacity: 0; transform: translateX(-50%) scale(0.8); }
+  to { opacity: 1; transform: translateX(-50%) scale(1); }
+}
+
+/* Robot Facial Expression Loop Animations */
+@keyframes animExprHappy {
+  0%, 30%, 100% { opacity: 1; }
+  33%, 97% { opacity: 0; }
+}
+
+@keyframes animExprJoy {
+  0%, 30%, 63%, 100% { opacity: 0; }
+  33%, 60% { opacity: 1; }
+}
+
+@keyframes animExprWink {
+  0%, 63%, 97%, 100% { opacity: 0; }
+  66%, 95% { opacity: 1; }
+}
+
+.expr-happy { animation: animExprHappy 7.5s infinite; }
+.expr-joy { animation: animExprJoy 7.5s infinite; }
+.expr-wink { animation: animExprWink 7.5s infinite; }
+
+/* Language Selection Grid */
+.lang-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.lang-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 22px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--card-border);
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text-main);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  min-height: 54px;
+}
+
+.lang-btn:hover, .lang-btn:active {
+  border-color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+}
+
+.lang-flag {
+  font-size: 22px;
+}
+
+/* ════════════════ INPUTS & SEARCH ════════════════ */
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 18px;
+  position: relative;
+}
+
+.field-label {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-sub);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wizard-input-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.wizard-input {
+  width: 100%;
+  height: 54px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1.5px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 0 18px;
+  color: var(--text-main);
+  font-size: 16px;
+  font-weight: 600;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.wizard-input:focus {
+  border-color: var(--accent-cyan);
+  background: rgba(0, 0, 0, 0.65);
+  box-shadow: 0 0 0 4px var(--accent-cyan-glow);
+}
+
+.wizard-input::placeholder {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+/* Auto-complete suggestions popup */
+.sug {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 200;
+  background: #0d1526;
+  border: 1.5px solid var(--accent-cyan);
+  border-radius: var(--radius-md);
+  max-height: 240px;
+  overflow-y: auto;
+  display: none;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.85);
+}
+
+.sug.open {
+  display: block;
+  animation: sugSlide 0.2s ease-out;
+}
+
+@keyframes sugSlide {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.sug div {
+  padding: 14px 18px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--text-main);
+}
+
+.sug div:last-child { border-bottom: none; }
+.sug div:hover, .sug div.sel {
+  background: rgba(6, 182, 212, 0.2);
+  color: var(--accent-cyan);
+}
+.sug div .room-tag {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-sub);
+}
+
+/* Quick Action Chips */
+.chips-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 22px;
+  justify-content: center;
+}
+
+.chip {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--card-border);
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text-main);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+}
+
+.chip:hover, .chip:active {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: #ffffff;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+/* Main Action Buttons (Thumb zone) */
+.wizard-btn {
+  width: 100%;
+  height: 56px;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 17.5px;
+  font-weight: 800;
+  font-family: inherit;
+  color: #0f172a;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  background: #ffffff;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.wizard-btn:hover {
+  background: #f1f5f9;
+  border-color: #ffffff;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.5);
+}
+
+.wizard-btn:active {
+  transform: scale(0.98);
+}
+
+.wizard-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Back Link Button */
+.back-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1.5px solid rgba(255, 255, 255, 0.22);
+  color: var(--text-main);
+  font-size: 14.5px;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+.back-btn:hover, .back-btn:active {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: #ffffff;
+  transform: translateY(-1px);
+}
+
+/* ════════════════ MAP SCREEN ════════════════ */
+#s-map {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: none;
+  flex-direction: column;
+  background: var(--bg-dark);
+}
+
+#s-map.active {
+  display: flex;
+}
+
+/* Floating Top Info Header */
+.map-top-bar {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  right: 14px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.map-info-card {
+  pointer-events: auto;
+  background: rgba(14, 22, 38, 0.90);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1.5px solid var(--card-border);
+  border-radius: 20px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: var(--shadow-md);
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.info-item .val {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--accent-emerald);
+}
+
+.info-item .lbl {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.dest-tag-badge {
+  background: rgba(6, 182, 212, 0.15);
+  border: 1px solid var(--accent-cyan);
+  color: var(--accent-cyan);
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  font-weight: 800;
+  max-width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Floor Badge Pills at Top Right */
+.floor-badge {
+  pointer-events: auto;
+  display: flex;
+  gap: 6px;
+  background: rgba(14, 22, 38, 0.90);
+  backdrop-filter: blur(16px);
+  padding: 5px;
+  border-radius: 16px;
+  border: 1.5px solid var(--card-border);
+  box-shadow: var(--shadow-md);
+}
+
+.floor-pill {
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text-sub);
+  border: 1px solid transparent;
+}
+
+.floor-pill.active {
+  background: var(--accent-emerald);
+  color: #000000;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+}
+
+/* Map Canvas Container */
+#map-container {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-dark-surface);
+}
+
+#map-container svg {
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+/* Transition Overlay for Multi-floor (Stairs/Elevator) */
+.transition-overlay {
+  position: absolute;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 25;
+  width: calc(100% - 32px);
+  max-width: 380px;
+  text-align: center;
+}
+
+.transition-btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px 24px;
+  border-radius: 18px;
+  border: 2px solid var(--accent-cyan);
+  background: rgba(14, 22, 38, 0.92);
+  color: var(--accent-cyan);
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.7), 0 0 25px rgba(6, 182, 212, 0.3);
+  animation: pulseBtn 2s infinite;
+}
+
+@keyframes pulseBtn {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+.transition-btn:active {
+  transform: scale(0.97);
+}
+
+/* Map Floating Controls (Thumb Zone Right) */
+.map-controls {
+  position: absolute;
+  right: 14px;
+  bottom: 80px;
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.map-ctrl-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: rgba(14, 22, 38, 0.90);
+  backdrop-filter: blur(16px);
+  border: 1.5px solid var(--card-border);
+  color: var(--text-main);
+  font-size: 18px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  transition: 0.2s;
+}
+
+.map-ctrl-btn:active {
+  transform: scale(0.92);
+  background: rgba(6, 182, 212, 0.2);
+}
+
+/* ════════════════ DRAWER (TURNS & EDIT) ════════════════ */
+#drawer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  background: rgba(14, 22, 38, 0.96);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-top: 1.5px solid var(--card-border);
+  border-radius: 28px 28px 0 0;
+  box-shadow: 0 -12px 50px rgba(0, 0, 0, 0.7);
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  max-height: 82dvh;
+}
+
+#drawer.collapsed {
+  transform: translateY(calc(100% - 62px));
+}
+
+.drawer-handle-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 0 8px;
+  cursor: pointer;
+}
+
+.drawer-handle-line {
+  width: 44px;
+  height: 5px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.25);
+  margin-bottom: 6px;
+}
+
+.drawer-summary-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 20px 8px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-sub);
+}
+
+#drawer-body {
+  padding: 8px 20px 24px;
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+  overflow-y: auto;
+  max-height: calc(82dvh - 62px);
+}
+
+/* Edit controls inside drawer */
+.drawer-edit {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.drawer-edit.show {
+  display: flex;
+}
+
+/* ════════════════ TOAST NOTICE ════════════════ */
+.toast-notice {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  background: rgba(14, 22, 38, 0.95);
+  border: 1.5px solid var(--accent-emerald);
+  padding: 12px 20px;
+  border-radius: 20px;
+  color: var(--text-main);
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: var(--shadow-md);
+  z-index: 300;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toast-notice.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Inline Mascot Component */
+.campy-mascot-svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Interactive Room Text Labels on SVG Map */
+.room-label-interactive {
+  cursor: pointer;
+  pointer-events: auto;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.room-label-interactive:hover {
+  fill: #06b6d4 !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.9));
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════════ SCREEN 1: WELCOME & LANGUAGE ════════════════ -->
+<div class="screen" id="s-lang">
+  <div class="wizard-card" style="text-align: center">
+
+    <!-- Standalone Mascot Graphic (No Badge Above) -->
+    <div class="mascot-hero-wrap" onclick="mascotSpeechClick()">
+      <div class="mascot-speech-bubble" id="mascot-bubble">Hoş geldiniz 👋</div>
+      <!-- Crisp Scalable Vector Mascot with Facial Expression Loop -->
+      <svg viewBox="0 0 120 120" class="campy-mascot-svg">
+        <defs>
+          <linearGradient id="campyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#ffffff" />
+            <stop offset="100%" stop-color="#cbd5e1" />
+          </linearGradient>
+          <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#1e293b" />
+            <stop offset="100%" stop-color="#0f172a" />
+          </linearGradient>
+        </defs>
+        <ellipse cx="60" cy="108" rx="36" ry="6" fill="rgba(0,0,0,0.4)"/>
+        <g>
+          <!-- Antenna -->
+          <line x1="60" y1="26" x2="60" y2="13" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="60" cy="11" r="5" fill="#ffffff"/>
+          <!-- Headphones / Ears -->
+          <rect x="18" y="42" width="10" height="24" rx="5" fill="#ffffff"/>
+          <rect x="92" y="42" width="10" height="24" rx="5" fill="#ffffff"/>
+          <!-- Robot Head Base -->
+          <rect x="24" y="24" width="72" height="66" rx="24" fill="url(#bodyGrad)" stroke="url(#campyGrad)" stroke-width="3.5"/>
+          <!-- Visor Display Screen -->
+          <rect x="32" y="34" width="56" height="38" rx="14" fill="#090d16" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+
+          <!-- Animated Facial Expressions Loop Group -->
+          <g class="mascot-face-loop">
+            <!-- Expression 1: Happy Normal Eyes ( • ‿ • ) -->
+            <g class="expr-happy">
+              <circle cx="48" cy="53" r="6" fill="#ffffff"/>
+              <circle cx="72" cy="53" r="6" fill="#ffffff"/>
+              <circle cx="48" cy="53" r="2.5" fill="#090d16"/>
+              <circle cx="72" cy="53" r="2.5" fill="#090d16"/>
+              <path d="M 52 63 Q 60 69 68 63" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+            </g>
+
+            <!-- Expression 2: Joyful Curved Eyes ( ^ ‿ ^ ) -->
+            <g class="expr-joy">
+              <path d="M 42 54 Q 48 46 54 54" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+              <path d="M 66 54 Q 72 46 78 54" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+              <path d="M 50 63 Q 60 70 70 63" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+            </g>
+
+            <!-- Expression 3: Winking Playful Eye ( ^ ‿ • ) -->
+            <g class="expr-wink">
+              <path d="M 42 54 Q 48 46 54 54" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="72" cy="53" r="6" fill="#ffffff"/>
+              <circle cx="72" cy="53" r="2.5" fill="#090d16"/>
+              <path d="M 52 63 Q 60 69 68 63" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+            </g>
+          </g>
+
+          <!-- Chest Badge -->
+          <circle cx="60" cy="78" r="6" fill="url(#campyGrad)"/>
+          <!-- Waving Hand -->
+          <path d="M 94 54 Q 106 46 102 34" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="102" cy="34" r="4.5" fill="#ffffff"/>
+        </g>
+      </svg>
+    </div>
+
+    <!-- App Title -->
+    <h1 style="font-size: 38px; font-weight: 900; background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 26px;">Campy</h1>
+
+    <!-- Language Selector Grid -->
+    <div class="lang-grid">
+      <button class="lang-btn" onclick="pickLang('ar')">
+        <span>العربية</span>
+      </button>
+      <button class="lang-btn" onclick="pickLang('tr')">
+        <span>Türkçe</span>
+      </button>
+      <button class="lang-btn" onclick="pickLang('en')">
+        <span>English</span>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════ SCREEN 2: DESTINATION ("Nereye?") ════════════════ -->
+<div class="screen hide" id="s-dest">
+  <div class="wizard-card">
+
+    <!-- Top Header Navigation with Small Campy Mascot on Top Left -->
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+      <!-- Animated Campy Mascot on Top Left -->
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="width: 64px; height: 64px; position: relative;">
+          <svg viewBox="0 0 120 120" class="campy-mascot-svg" style="width:100%;height:100%; filter: drop-shadow(0 6px 12px rgba(0,0,0,0.5));">
+            <defs>
+              <linearGradient id="campyGradMini" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#ffffff" />
+                <stop offset="100%" stop-color="#cbd5e1" />
+              </linearGradient>
+              <linearGradient id="bodyGradMini" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#1e293b" />
+                <stop offset="100%" stop-color="#0f172a" />
+              </linearGradient>
+            </defs>
+            <ellipse cx="60" cy="108" rx="36" ry="6" fill="rgba(0,0,0,0.4)"/>
+            <g>
+              <line x1="60" y1="26" x2="60" y2="13" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round"/>
+              <circle cx="60" cy="11" r="5" fill="#ffffff"/>
+              <rect x="18" y="42" width="10" height="24" rx="5" fill="#ffffff"/>
+              <rect x="92" y="42" width="10" height="24" rx="5" fill="#ffffff"/>
+              <rect x="24" y="24" width="72" height="66" rx="24" fill="url(#bodyGradMini)" stroke="url(#campyGradMini)" stroke-width="4"/>
+              <rect x="32" y="34" width="56" height="38" rx="14" fill="#090d16" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+
+              <!-- Fixed Joyful Smiling Face (Both eyes closed ^ ‿ ^) -->
+              <g>
+                <path d="M 42 54 Q 48 46 54 54" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+                <path d="M 66 54 Q 72 46 78 54" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+                <path d="M 50 63 Q 60 70 70 63" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+              </g>
+            </g>
+          </svg>
+        </div>
+      </div>
+      <button class="back-btn" onclick="goScreen('s-dest', 's-lang')">
+        <span id="btn-back-lang">← Dil Seçimi</span>
+      </button>
+    </div>
+
+    <h2 style="font-size: 23px; font-weight: 800; margin-bottom: 6px; text-align: center;" id="dest-title">Nereye gitmek istiyorsun?</h2>
+    <p style="font-size: 13.5px; color: var(--text-sub); margin-bottom: 20px; text-align: center;" id="dest-intro">Sınıf kodunu yaz veya sık kullanılan mekan seç</p>
+
+    <!-- Quick Chips for Popular Destinations -->
+    <div class="chips-label" style="text-align: center;" id="txt-quick-label">Sık Kullanılan Mekanlar</div>
+    <div id="dest-chips" class="chips"></div>
+
+    <!-- Destination Search Input (Target icon 🎯 retained) -->
+    <div class="field-group">
+      <div class="field-label">
+        <span>🎯</span>
+        <span id="lbl-dest">Hedef Sınıf / Mekan</span>
+      </div>
+      <div class="wizard-input-wrap">
+        <input class="wizard-input" id="inp-dest" autocomplete="off" placeholder="مثال: A120، B205، AZ05...">
+        <div class="sug" id="sug-dest"></div>
+      </div>
+    </div>
+
+    <!-- Next Button -> Clean matte style without glowing lights or extra icons -->
+    <button class="wizard-btn" id="btn-dest" onclick="goToOrigin()">
+      <span id="txt-btn-next">İleri</span>
+    </button>
+
+  </div>
+</div>
+
+<!-- ════════════════ SCREEN 3: ORIGIN ("Neredesin?") ════════════════ -->
+<div class="screen hide" id="s-origin">
+  <div class="wizard-card">
+
+    <!-- Top Header Navigation with Animated Campy Mascot on Top Left -->
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+      <!-- Animated Campy Mascot on Top Left -->
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="width: 64px; height: 64px; position: relative;">
+          <svg viewBox="0 0 120 120" class="campy-mascot-svg" style="width:100%;height:100%; filter: drop-shadow(0 6px 12px rgba(0,0,0,0.5));">
+            <defs>
+              <linearGradient id="campyGradMini3" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#ffffff" />
+                <stop offset="100%" stop-color="#cbd5e1" />
+              </linearGradient>
+              <linearGradient id="bodyGradMini3" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#1e293b" />
+                <stop offset="100%" stop-color="#0f172a" />
+              </linearGradient>
+            </defs>
+            <ellipse cx="60" cy="108" rx="36" ry="6" fill="rgba(0,0,0,0.4)"/>
+            <g>
+              <line x1="60" y1="26" x2="60" y2="13" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round"/>
+              <circle cx="60" cy="11" r="5" fill="#ffffff"/>
+              <rect x="18" y="42" width="10" height="24" rx="5" fill="#ffffff"/>
+              <rect x="92" y="42" width="10" height="24" rx="5" fill="#ffffff"/>
+              <rect x="24" y="24" width="72" height="66" rx="24" fill="url(#bodyGradMini3)" stroke="url(#campyGradMini3)" stroke-width="4"/>
+              <rect x="32" y="34" width="56" height="38" rx="14" fill="#090d16" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+
+              <!-- Fixed Joyful Smiling Face (Both eyes closed ^ ‿ ^) -->
+              <g>
+                <path d="M 42 54 Q 48 46 54 54" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+                <path d="M 66 54 Q 72 46 78 54" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+                <path d="M 50 63 Q 60 70 70 63" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+              </g>
+            </g>
+          </svg>
+        </div>
+      </div>
+      <button class="back-btn" onclick="goScreen('s-origin', 's-dest')">
+        <span id="btn-back-dest">← Hedef Seçimi</span>
+      </button>
+    </div>
+
+    <h2 style="font-size: 23px; font-weight: 800; margin-bottom: 6px; text-align: center;" id="origin-title">Şu an neredesin?</h2>
+    <p style="font-size: 13.5px; color: var(--text-sub); margin-bottom: 20px; text-align: center;" id="origin-intro">Konumunu seç veya varsayılan girişi kullan</p>
+
+    <!-- Quick Chips for Origin -->
+    <div id="origin-chips" class="chips"></div>
+
+    <!-- Origin Search Input -->
+    <div class="field-group">
+      <div class="field-label">
+        <span>📍</span>
+        <span id="lbl-origin">Başlangıç Konumun</span>
+      </div>
+      <div class="wizard-input-wrap">
+        <input class="wizard-input" id="inp-origin" autocomplete="off" placeholder="🚪 المدخل الرئيسي (افتراضي)">
+        <div class="sug" id="sug-origin"></div>
+      </div>
+    </div>
+
+    <!-- Start Navigation Button -> Clean matte design without rocket emoji -->
+    <button class="wizard-btn" id="btn-origin" onclick="startRoute()">
+      <span id="txt-btn-start">Navigasyonu Başlat</span>
+    </button>
+
+  </div>
+</div>
+
+<!-- ════════════════ SCREEN 4: MAP SCREEN ════════════════ -->
+<div id="s-map">
+
+  <!-- Floating Top Bar -->
+  <div class="map-top-bar">
+    <!-- Floor Selector Pills -->
+    <div class="floor-badge" id="floor-badge"></div>
+
+    <!-- Building Info Badge (Floating Top Right) -->
+    <div class="map-info-card" id="map-building-card" style="pointer-events:auto; padding: 8px 14px; border-radius: 16px;">
+      <div style="display:flex; align-items:center; gap: 8px;">
+        <span style="font-size: 16px;">🏢</span>
+        <div style="display:flex; flex-direction:column;">
+          <span style="font-size:12.5px; font-weight:800; color:var(--text-main);">Biruni University</span>
+          <span style="font-size:10.5px; font-weight:700; color:var(--accent-cyan);" id="building-floor-txt">Ground Floor</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Map Canvas -->
+  <div id="map-container">
+    <!-- SVG injected dynamically -->
+  </div>
+
+  <!-- Transition Overlay (Stairs / Elevator for Multi-floor) -->
+  <div class="transition-overlay" id="transition-overlay" style="display:none"></div>
+
+  <!-- Floating Controls (Camera Tracking / Restart Path / Full Map Toggle / Recenter) -->
+  <div class="map-controls">
+    <button class="map-ctrl-btn active" id="btn-cam-track" onclick="toggleCamTrack()" aria-label="Camera Tracking" title="تعقب الكاميرا لكامبي">🎥</button>
+    <button class="map-ctrl-btn" onclick="restartRouteAnimation()" aria-label="Restart Path" title="إعادة تشغيل المسار">🔄</button>
+    <button class="map-ctrl-btn" id="btn-full-map" onclick="toggleFullMapView()" aria-label="Toggle Full Map" title="إظهار الخريطة كاملة / التكبير على المسار">🗺️</button>
+    <button class="map-ctrl-btn" onclick="recenterOnCampy()" aria-label="Recenter" title="إعادة التمركز على كامبي">🎯</button>
+  </div>
+
+  <!-- Bottom Navigation Drawer -->
+  <div id="drawer" class="collapsed">
+    <div class="drawer-handle-bar" onclick="toggleDrawer()">
+      <div class="drawer-handle-line"></div>
+      <div class="drawer-summary-strip">
+        <span id="drawer-quick-text">⚙️ Rotayı Değiştir / Ayarlar</span>
+        <span id="drawer-toggle-icon">▲</span>
+      </div>
+    </div>
+
+    <div id="drawer-body">
+      <!-- Edit controls inside drawer -->
+      <div class="drawer-edit" id="drawer-edit">
+        <div class="wizard-input-wrap">
+          <input class="wizard-input" id="edit-dest" autocomplete="off" placeholder="Hedef Değiştir...">
+          <div class="sug" id="sug-edit-dest"></div>
+        </div>
+        <div class="wizard-input-wrap">
+          <input class="wizard-input" id="edit-origin" autocomplete="off" placeholder="Konum Değiştir...">
+          <div class="sug" id="sug-edit-origin"></div>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button class="wizard-btn" style="height: 46px; font-size: 15px;" id="btn-edit" onclick="reRoute()">Yeniden Hesapla</button>
+          <button class="wizard-btn" style="height: 46px; font-size: 15px; background: rgba(255,255,255,0.1); box-shadow: none;" onclick="resetToHome()">Ana Sayfa</button>
+        </div>
+      </div>
+
+      <!-- Turn-by-Turn Directions Container -->
+      <div id="drawer-directions"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast Notice for Notifications -->
+<div class="toast-notice" id="toast-notice">
+  <span>🎯</span>
+  <span id="toast-msg">Hedefe ulaştınız!</span>
+</div>
+
+<script>
+// ════════════════ TRANSLATIONS (I18N) ════════════════
+const T = {
+  ar: {
+    unionBadge: "اتحاد طلاب جامعة بيروني",
+    welcomeSub: "اعثر على قاعتك الدراسية في 5 ثوانٍ",
+    whereTo: "إلى أين تريد الذهاب؟",
+    destIntro: "اكتب رمز القاعة أو اختر من الأماكن الشائعة",
+    whereFrom: "أين أنت الآن؟",
+    originIntro: "اختر موقعك الحالي أو استخدم المدخل الرئيسي",
+    lblDest: "القاعة / المكان الهدف",
+    lblOrigin: "موقعك الحالي",
+    destPlaceholder: "مثال: A120، B205، AZ05...",
+    quickLabel: "الأماكن الأكثر زيارة",
+    library: "📚 المكتبة",
+    cafeteria: "☕ الكافتيريا",
+    studentAff: "🎓 شؤون الطلاب",
+    mainEntrance: "🚪 المدخل الرئيسي",
+    startPoint: "🚪 المدخل الرئيسي",
+    classrooms: "🏫 القاعات A120",
+    btnNext: "التالي",
+    btnStartNav: "ابدأ الملاحة",
+    backLang: "← تغيير اللغة",
+    backDest: "← اختيار الوجهة",
+    distance: "المسافة",
+    time: "الوقت",
+    goToFloor: "انتقل إلى",
+    viaStairs: "عبر السلالم 🪜",
+    viaElevator: "عبر المصعد 🛗",
+    floor0: "الأرضي",
+    floor1: "الطابق 1",
+    floor2: "الطابق 2",
+    reStart: "تحديث المسار",
+    calculating: "جاري رسم أفضل طريق...",
+    errorNoRoute: "لم نتمكن من العثور على طريق لهذا المكان.",
+    drawerQuickText: "⚙️ خيارات وتعديل المسار",
+    home: "الرئيسية",
+    arrived: "لقد وصلت إلى وجهتك! 🎉"
+  },
+  tr: {
+    unionBadge: "Biruni Öğrenci Birliği",
+    welcomeSub: "Kampüste sınıfını 5 saniyede bul",
+    whereTo: "Nereye gitmek istiyorsun?",
+    destIntro: "Sınıf kodunu yaz veya sık kullanılan mekan seç",
+    whereFrom: "Şu an neredesin?",
+    originIntro: "Konumunu seç veya varsayılan girişi kullan",
+    lblDest: "Hedef Sınıf / Mekan",
+    lblOrigin: "Şu Anki Konumun",
+    destPlaceholder: "Örn: A120, B205, AZ05...",
+    quickLabel: "Sık Kullanılan Mekanlar",
+    library: "📚 Kütüphane",
+    cafeteria: "☕ Kafeterya",
+    studentAff: "🎓 Öğrenci İşleri",
+    mainEntrance: "🚪 Ana Giriş",
+    startPoint: "🚪 Ana Giriş",
+    classrooms: "🏫 Derslik A120",
+    btnNext: "İleri",
+    btnStartNav: "Navigasyonu Başlat",
+    backLang: "← Dil Seçimi",
+    backDest: "← Hedef Seçimi",
+    distance: "Mesafe",
+    time: "Süre",
+    goToFloor: "Kata Geç:",
+    viaStairs: "Merdiven ile 🪜",
+    viaElevator: "Asansör ile 🛗",
+    floor0: "Zemin Kat",
+    floor1: "1. Kat",
+    floor2: "2. Kat",
+    reStart: "Yeniden Hesapla",
+    calculating: "En hızlı yol hesaplanıyor...",
+    errorNoRoute: "Bu yer bulunamadı veya rota mevcut değil.",
+    drawerQuickText: "⚙️ Rotayı Değiştir / Ayarlar",
+    home: "Ana Sayfa",
+    arrived: "Hedefe ulaştınız! 🎉"
+  },
+  en: {
+    unionBadge: "Biruni Student Union",
+    welcomeSub: "Find your room in 5 seconds",
+    whereTo: "Where do you want to go?",
+    destIntro: "Type room code or select popular destination",
+    whereFrom: "Where are you right now?",
+    originIntro: "Select current location or use main entrance",
+    lblDest: "Destination Room / Spot",
+    lblOrigin: "Your Current Location",
+    destPlaceholder: "e.g. A120, B205, AZ05...",
+    quickLabel: "Popular Spots",
+    library: "📚 Library",
+    cafeteria: "☕ Cafeteria",
+    studentAff: "🎓 Student Affairs",
+    mainEntrance: "🚪 Main Entrance",
+    startPoint: "🚪 Main Entrance",
+    classrooms: "🏫 Classroom A120",
+    btnNext: "Next",
+    btnStartNav: "Start Navigation",
+    backLang: "← Language",
+    backDest: "← Destination",
+    distance: "Distance",
+    time: "Est. Time",
+    goToFloor: "Go to",
+    viaStairs: "Via Stairs 🪜",
+    viaElevator: "Via Elevator 🛗",
+    floor0: "Ground",
+    floor1: "1st Floor",
+    floor2: "2nd Floor",
+    reStart: "Recalculate",
+    calculating: "Calculating shortest route...",
+    errorNoRoute: "Location not found or no route available.",
+    drawerQuickText: "⚙️ Edit Route / Settings",
+    home: "Home",
+    arrived: "You have arrived! 🎉"
+  }
+};
+
+let lang = 'ar';
+let MEKANLAR = [];
+let routeData = null;
+let currentFloorIdx = 0;
+let pzInstance = null;
+
+// Fetch places list on boot
+fetch('/api/mekanlar').then(r => r.json()).then(d => {
+  MEKANLAR = d.mekanlar || [];
+}).catch(e => console.log('Mekanlar yukleme hatasi', e));
+
+// ════════════════ LANGUAGE LOGIC ════════════════
+function pickLang(l) {
+  lang = l;
+  document.documentElement.lang = l;
+  document.body.dir = (l === 'ar') ? 'rtl' : 'ltr';
+  applyLangToUI();
+  goScreen('s-lang', 's-dest');
+}
+
+function applyLangToUI() {
+  const t = T[lang];
+  const unionBadge = document.getElementById('txt-union-badge');
+  if (unionBadge) unionBadge.textContent = t.unionBadge;
+
+  // Screen 2: Destination
+  const destTitle = document.getElementById('dest-title');
+  if (destTitle) destTitle.textContent = t.whereTo;
+  const destIntro = document.getElementById('dest-intro');
+  if (destIntro) destIntro.textContent = t.destIntro;
+  const lblDest = document.getElementById('lbl-dest');
+  if (lblDest) lblDest.textContent = t.lblDest;
+  const inpDest = document.getElementById('inp-dest');
+  if (inpDest) inpDest.placeholder = t.destPlaceholder;
+  const quickLabel = document.getElementById('txt-quick-label');
+  if (quickLabel) quickLabel.textContent = t.quickLabel;
+  const btnBackLang = document.getElementById('btn-back-lang');
+  if (btnBackLang) btnBackLang.textContent = t.backLang;
+  const txtBtnNext = document.getElementById('txt-btn-next');
+  if (txtBtnNext) txtBtnNext.textContent = t.btnNext;
+
+  // Screen 3: Origin
+  const originTitle = document.getElementById('origin-title');
+  if (originTitle) originTitle.textContent = t.whereFrom;
+  const originIntro = document.getElementById('origin-intro');
+  if (originIntro) originIntro.textContent = t.originIntro;
+  const lblOrigin = document.getElementById('lbl-origin');
+  if (lblOrigin) lblOrigin.textContent = t.lblOrigin;
+  const inpOrigin = document.getElementById('inp-origin');
+  if (inpOrigin) inpOrigin.placeholder = t.startPoint;
+  const btnBackDest = document.getElementById('btn-back-dest');
+  if (btnBackDest) btnBackDest.textContent = t.backDest;
+  const txtBtnStart = document.getElementById('txt-btn-start');
+  if (txtBtnStart) txtBtnStart.textContent = t.btnStartNav;
+
+  // Screen 4: Map & Drawer
+  const mapDistLbl = document.getElementById('map-dist-lbl');
+  if (mapDistLbl) mapDistLbl.textContent = t.distance;
+  const mapTimeLbl = document.getElementById('map-time-lbl');
+  if (mapTimeLbl) mapTimeLbl.textContent = t.time;
+  const drawerQuickText = document.getElementById('drawer-quick-text');
+  if (drawerQuickText) drawerQuickText.textContent = t.drawerQuickText;
+  const btnEdit = document.getElementById('btn-edit');
+  if (btnEdit) btnEdit.textContent = t.reStart;
+
+  // Destination Quick Chips
+  const destChips = document.getElementById('dest-chips');
+  if (destChips) {
+    destChips.innerHTML = `
+      <div class="chip" onclick="quickDest('KÜTÜPHANE Z1')">${t.library}</div>
+      <div class="chip" onclick="quickDest('QR KAFE')">${t.cafeteria}</div>
+      <div class="chip" onclick="quickDest('ÖĞRENCİ İŞLERİ')">${t.studentAff}</div>
+    `;
+  }
+
+  // Origin Quick Chips
+  const originChips = document.getElementById('origin-chips');
+  if (originChips) {
+    originChips.innerHTML = `
+      <div class="chip" onclick="quickOrigin('START_POINT')">${t.startPoint}</div>
+    `;
+  }
+}
+
+// ════════════════ SCREEN TRANSITIONS & WIZARD ════════════════
+function goScreen(fromId, toId) {
+  document.getElementById(fromId).classList.add('hide');
+  setTimeout(() => {
+    document.getElementById(toId).classList.remove('hide');
+  }, 250);
+}
+
+function goToOrigin() {
+  const dest = document.getElementById('inp-dest').value.trim();
+  if (!dest) return;
+  goScreen('s-dest', 's-origin');
+}
+
+function resetToHome() {
+  document.getElementById('s-map').classList.remove('active');
+  document.getElementById('s-origin').classList.add('hide');
+  document.getElementById('s-dest').classList.remove('hide');
+  document.getElementById('s-lang').classList.add('hide');
+}
+
+function quickDest(v) {
+  document.getElementById('inp-dest').value = v;
+  goToOrigin();
+}
+
+function quickOrigin(v) {
+  document.getElementById('inp-origin').value = v;
+  startRoute();
+}
+
+// ════════════════ AUTOCOMPLETE SUGGESTIONS ════════════════
+function setupSug(inputId, sugId) {
+  const inp = document.getElementById(inputId);
+  const box = document.getElementById(sugId);
+  let sel = -1;
+  let currentList = [];
+
+  inp.addEventListener('input', () => show(inp.value));
+  inp.addEventListener('focus', () => show(inp.value));
+  inp.addEventListener('blur', () => setTimeout(() => box.classList.remove('open'), 200));
+
+  inp.addEventListener('keydown', e => {
+    const items = box.querySelectorAll('div');
+    if (!items.length) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); sel = Math.min(sel + 1, items.length - 1); mark(items); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); sel = Math.max(sel - 1, 0); mark(items); }
+    else if (e.key === 'Enter' && sel >= 0) { e.preventDefault(); pick(sel); }
+  });
+
+  function mark(items) {
+    items.forEach((o, i) => o.classList.toggle('sel', i === sel));
+    if (items[sel]) items[sel].scrollIntoView({ block: 'nearest' });
+  }
+
+  function pick(i) {
+    if (!currentList[i]) return;
+    inp.value = currentList[i];
+    box.classList.remove('open');
+  }
+
+  function show(q) {
+    q = (q || '').trim().toUpperCase().replace(/[-\s]/g, '');
+    sel = -1;
+    let list = MEKANLAR;
+    if (q) list = MEKANLAR.filter(m => m.toUpperCase().replace(/[-\s]/g, '').includes(q));
+    list = list.slice(0, 30);
+    currentList = list;
+
+    if (!list.length) { box.classList.remove('open'); return; }
+
+    box.innerHTML = list.map(m => {
+      let katTag = 'Mekan';
+      if (m.includes('Z')) katTag = 'Zemin Kat';
+      else if (m.match(/\d/)) katTag = `${m.match(/\d/)[0]}. Kat`;
+      return `<div><span>${m}</span><span class="room-tag">${katTag}</span></div>`;
+    }).join('');
+
+    box.querySelectorAll('div').forEach((d, i) => {
+      d.addEventListener('mousedown', e => { e.preventDefault(); pick(i); });
+    });
+    box.classList.add('open');
+  }
+}
+
+setupSug('inp-dest', 'sug-dest');
+setupSug('inp-origin', 'sug-origin');
+setupSug('edit-dest', 'sug-edit-dest');
+setupSug('edit-origin', 'sug-edit-origin');
+
+// ════════════════ ROUTING & API ════════════════
+async function startRoute() {
+  const dest = document.getElementById('inp-dest').value.trim();
+  let origin = document.getElementById('inp-origin').value.trim();
+  if (!origin) origin = 'START_POINT';
+  if (!dest) return;
+
+  // Hide all wizard screens
+  document.getElementById('s-origin').classList.add('hide');
+  document.getElementById('s-dest').classList.add('hide');
+  document.getElementById('s-lang').classList.add('hide');
+
+  // Show map screen
+  const mapScreen = document.getElementById('s-map');
+  mapScreen.classList.add('active');
+
+  // Set top bar target badge (if element exists)
+  const mapDestBadge = document.getElementById('map-dest-badge');
+  if (mapDestBadge) mapDestBadge.textContent = `🎯 ${dest}`;
+
+  // Show loader in drawer
+  const drawer = document.getElementById('drawer');
+  drawer.classList.remove('collapsed');
+  document.getElementById('drawer-directions').innerHTML = `
+    <div style="text-align:center; padding: 30px; color: var(--accent-cyan); font-weight: 700;">
+      <p style="margin-bottom:8px; font-size:16px;">${T[lang].calculating}</p>
+      <div style="display:inline-block; width:24px; height:24px; border:3px solid var(--accent-cyan); border-top-color:transparent; border-radius:50%; animation:spin 0.8s linear infinite;"></div>
+    </div>
+  `;
+
+  // Sync edit fields inside drawer
+  document.getElementById('edit-dest').value = dest;
+  document.getElementById('edit-origin').value = (origin === 'START_POINT') ? '' : origin;
+
+  try {
+    const res = await fetch('/api/rota', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ baslangic: origin, hedef: dest, tercih: 'MERDIVEN' })
+    });
+    const d = await res.json();
+
+    if (d.durum !== 'ok') {
+      document.getElementById('drawer-directions').innerHTML = `
+        <div style="text-align:center; padding: 30px; color: var(--danger);">
+          <p style="font-weight:700; font-size:16px;">${T[lang].errorNoRoute}</p>
+        </div>
+      `;
+      return;
+    }
+
+    routeData = d;
+    currentFloorIdx = 0;
+
+    // Update stats header (if elements exist)
+    const distVal = document.getElementById('map-dist-val');
+    if (distVal) distVal.textContent = `${d.mesafe} m`;
+    const timeVal = document.getElementById('map-time-val');
+    if (timeVal) timeVal.textContent = `~${d.dakika} dk`;
+
+    renderDrawerContent(d);
+    showFloorMap(0);
+
+    // Auto Collapse Drawer after short preview
+    setTimeout(() => {
+      drawer.classList.add('collapsed');
+    }, 1200);
+
+  } catch (e) {
+    document.getElementById('drawer-directions').innerHTML = `
+      <p style="text-align:center; color:var(--danger); padding:20px;">Bağlantı hatası oluştu.</p>
+    `;
+  }
+}
+
+async function reRoute() {
+  const dest = document.getElementById('edit-dest').value.trim();
+  let origin = document.getElementById('edit-origin').value.trim();
+  if (!origin) origin = 'START_POINT';
+  if (!dest) return;
+
+  document.getElementById('inp-dest').value = dest;
+  document.getElementById('inp-origin').value = origin;
+  startRoute();
+}
+
+// ════════════════ MOBILE TOUCH & PINCH-ZOOM GESTURES ════════════════
+const pzEventsHandler = {
+  haltEventListeners: ['touchstart', 'touchend', 'touchmove', 'touchleave', 'touchcancel'],
+  init: function(options) {
+    const instance = options.svgPanZoomElement;
+    let initialScale = 1;
+    let pannedX = 0;
+    let pannedY = 0;
+
+    if (window.Hammer) {
+      this.hammer = Hammer(options.svgElement, {
+        inputClass: Hammer.SUPPORT_POINTER_EVENTS ? Hammer.PointerEventInput : Hammer.TouchInput
+      });
+
+      this.hammer.get('pinch').set({ enable: true });
+
+      this.hammer.on('doubletap', function(ev) {
+        instance.zoomIn();
+      });
+
+      this.hammer.on('panstart panmove', function(ev) {
+        if (ev.type === 'panstart') {
+          pannedX = 0;
+          pannedY = 0;
+        }
+        instance.panBy({ x: ev.deltaX - pannedX, y: ev.deltaY - pannedY });
+        pannedX = ev.deltaX;
+        pannedY = ev.deltaY;
+      });
+
+      this.hammer.on('pinchstart pinchmove', function(ev) {
+        if (ev.type === 'pinchstart') {
+          initialScale = instance.getZoom();
+          instance.zoomAtPoint(initialScale * ev.scale, { x: ev.center.x, y: ev.center.y });
+        }
+        instance.zoomAtPoint(initialScale * ev.scale, { x: ev.center.x, y: ev.center.y });
+      });
+    }
+  },
+  destroy: function() {
+    if (this.hammer) this.hammer.destroy();
+  }
+};
+
+// Mobile Touch Tap Delegate for elements inside SVG (Campy stairs transition & Classroom selection)
+function setupSvgTouchTapDelegate(svg) {
+  let startX = 0, startY = 0, startTime = 0;
+
+  svg.addEventListener('pointerdown', function(e) {
+    startX = e.clientX;
+    startY = e.clientY;
+    startTime = Date.now();
+  }, { passive: true });
+
+  svg.addEventListener('pointerup', function(e) {
+    const dx = Math.abs(e.clientX - startX);
+    const dy = Math.abs(e.clientY - startY);
+    const duration = Date.now() - startTime;
+
+    // Quick tap gesture (small movement < 14px and quick duration < 350ms)
+    if (dx < 14 && dy < 14 && duration < 350) {
+      handleSvgElementTap(e.clientX, e.clientY);
+    }
+  });
+}
+
+function handleSvgElementTap(x, y) {
+  const target = document.elementFromPoint(x, y);
+  if (!target) return;
+
+  // 1. Campy mascot or speech bubble tapped (Stairs next floor transition)
+  const robotEl = target.closest('#campy-moving-robot') || target.closest('#campy-map-bubble');
+  if (robotEl) {
+    const nextIdx = currentFloorIdx + 1;
+    const hasNextFloor = (routeData && routeData.asamalar && nextIdx < routeData.asamalar.length);
+    if (hasNextFloor) {
+      showFloorMap(nextIdx);
+    } else {
+      mascotSpeechClick();
+    }
+    return;
+  }
+
+  // 2. Interactive room label tapped (Instant route recalculation to clicked room)
+  const roomEl = target.closest('.room-label-interactive');
+  if (roomEl) {
+    const roomName = roomEl.getAttribute('data-room');
+    if (roomName) {
+      selectRoomFromMap(roomName);
+    }
+    return;
+  }
+}
+
+// ════════════════ MAP & FLOOR RENDERER ════════════════
+function showFloorMap(idx) {
+  if (!routeData) return;
+  currentFloorIdx = idx;
+  const container = document.getElementById('map-container');
+  const stage = routeData.asamalar[idx];
+
+  // Clear previous SVG
+  const oldSvg = container.querySelector('svg');
+  if (oldSvg) oldSvg.remove();
+  if (pzInstance) { try { pzInstance.destroy(); } catch (e) {} }
+
+  // Inject SVG
+  const tmp = document.createElement('div');
+  tmp.innerHTML = stage.svg;
+  const svg = tmp.querySelector('svg');
+  svg.id = 'route-svg';
+  svg.style.cssText = 'width:100%; height:100%; position:absolute; inset:0;';
+
+  // Custom dark styling on SVG elements
+  svg.querySelectorAll('rect').forEach(r => r.setAttribute('fill', '#090d16'));
+  svg.querySelectorAll('path').forEach(p => {
+    if (p.classList.contains('campy-route-path')) {
+      p.setAttribute('stroke', '#10b981');
+      p.setAttribute('stroke-width', '5');
+      p.style.filter = 'drop-shadow(0 0 8px rgba(16,185,129,0.7))';
+    } else {
+      p.setAttribute('stroke', '#26334d');
+      p.setAttribute('stroke-width', '1.5');
+    }
+  });
+
+  container.insertBefore(svg, container.firstChild);
+  setupSvgTouchTapDelegate(svg);
+  startMover(svg);
+
+  // Pan Zoom Init with Mobile Pinch-Zoom Support
+  setTimeout(() => {
+    pzInstance = svgPanZoom('#route-svg', {
+      zoomEnabled: true,
+      controlIconsEnabled: false,
+      fit: true,
+      center: true,
+      minZoom: 0.4,
+      maxZoom: 8,
+      customEventsHandler: pzEventsHandler
+    });
+    // Default: Zoom in close to Campy and path for immersive camera follow
+    if (!isFullMapView) {
+      pzInstance.zoomAtPoint(2.5, { x: container.clientWidth / 2, y: container.clientHeight / 2 });
+    }
+  }, 150);
+
+  // Floor Pill Badges
+  const badgeContainer = document.getElementById('floor-badge');
+  const currentStageKat = stage ? stage.kat : 'zemin';
+  const currentFloorLabel = (currentStageKat === 'zemin') ? T[lang].floor0 : currentStageKat.replace('kat', '') + '. Kat';
+  
+  const floorTxtEl = document.getElementById('building-floor-txt');
+  if (floorTxtEl) floorTxtEl.textContent = currentFloorLabel;
+
+  if (routeData.asamalar.length > 1) {
+    badgeContainer.style.display = 'flex';
+    badgeContainer.innerHTML = routeData.asamalar.map((s, i) => {
+      const lbl = (s.kat === 'zemin') ? T[lang].floor0 : s.kat.replace('kat', '') + '. Kat';
+      return `<div class="floor-pill ${(i === idx) ? 'active' : ''}" onclick="showFloorMap(${i})">${lbl}</div>`;
+    }).join('');
+  } else {
+    badgeContainer.style.display = 'none';
+  }
+
+  // Multi-floor Transition overlay
+  updateTransitionOverlay();
+}
+
+// ════════════════ MAP CONTROLS ════════════════
+let isCamTrack = true;
+let isFullMapView = false;
+
+function toggleCamTrack() {
+  const btn = document.getElementById('btn-cam-track');
+  isCamTrack = !isCamTrack;
+  if (btn) btn.classList.toggle('active', isCamTrack);
+  const toastText = (lang === 'ar') ? (isCamTrack ? "🎥 تم تفعيل تعقب الكاميرا لكامبي" : "🎥 تم إيقاف تعقب الكاميرا") :
+                    (lang === 'tr') ? (isCamTrack ? "🎥 Kamera takibi aktif" : "🎥 Kamera takibi kapalı") :
+                    (isCamTrack ? "🎥 Camera tracking enabled" : "🎥 Camera tracking disabled");
+  showToast(toastText);
+}
+
+function toggleFullMapView() {
+  const btn = document.getElementById('btn-full-map');
+  const camBtn = document.getElementById('btn-cam-track');
+  isFullMapView = !isFullMapView;
+
+  if (isFullMapView) {
+    // Show Full Map: zoom out to fit entire map, pause camera tracking
+    isCamTrack = false;
+    if (camBtn) camBtn.classList.remove('active');
+    if (btn) btn.classList.add('active');
+
+    if (pzInstance) {
+      pzInstance.fit();
+      pzInstance.center();
+    }
+    showToast((lang === 'ar') ? "🗺️ إظهار الخريطة كاملة" : (lang === 'tr') ? "🗺️ Tüm Harita Gösterimi" : "🗺️ Full Map View");
+  } else {
+    // Zoom in on path / Campy, resume camera tracking
+    isCamTrack = true;
+    if (camBtn) camBtn.classList.add('active');
+    if (btn) btn.classList.remove('active');
+
+    if (pzInstance) {
+      pzInstance.zoomAtPoint(2.5, { x: window.innerWidth / 2, y: window.innerHeight / 2 });
+    }
+    showToast((lang === 'ar') ? "🔍 التكبير على كامبي والمسار" : (lang === 'tr') ? "🔍 Odaklanmış Yol Gösterimi" : "🔍 Focused Path View");
+  }
+}
+
+function recenterOnCampy() {
+  isFullMapView = false;
+  isCamTrack = true;
+  const camBtn = document.getElementById('btn-cam-track');
+  const mapBtn = document.getElementById('btn-full-map');
+  if (camBtn) camBtn.classList.add('active');
+  if (mapBtn) mapBtn.classList.remove('active');
+
+  if (pzInstance) {
+    pzInstance.zoomAtPoint(2.5, { x: window.innerWidth / 2, y: window.innerHeight / 2 });
+  }
+}
+
+// ════════════════ TRANSITION OVERLAY ════════════════
+function updateTransitionOverlay() {
+  // Separate bottom floating overlay button removed per user request.
+  // Campy himself displays the interactive transition speech button right at the stairs on the map!
+  const overlay = document.getElementById('transition-overlay');
+  if (overlay) {
+    overlay.style.display = 'none';
+    overlay.innerHTML = '';
+  }
+}
+
+// ════════════════ ANIMATED CAMPY ROUTE MASCOT MOVER ════════════════
+let currentMoverRestart = null;
+
+function restartRouteAnimation() {
+  if (typeof currentMoverRestart === 'function') {
+    currentMoverRestart();
+  }
+}
+
+function startMover(svg) {
+  const path = svg.querySelector('.campy-route-path');
+  const oldMover = svg.querySelector('.campy-mover');
+  if (!path) return;
+
+  const nextIdx = currentFloorIdx + 1;
+  const hasNextFloor = (routeData && routeData.asamalar && nextIdx < routeData.asamalar.length);
+  const currentStage = routeData.asamalar[currentFloorIdx];
+  const t = T[lang];
+
+  // SVG Visor Display Options (Refined proportioned icons)
+  const stairsVisorSvg = `
+    <g transform="translate(16, 14) scale(0.78) translate(-16, -14)">
+      <path d="M 11 17.5 L 11 15 L 14 15 L 14 12.5 L 17 12.5 L 17 10 L 20 10 L 20 8.5" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="10" y1="17.5" x2="21" y2="17.5" stroke="#ffffff" stroke-width="1.3" stroke-linecap="round"/>
+    </g>
+  `;
+
+  const targetVisorSvg = `
+    <g transform="translate(16, 14) scale(0.78) translate(-16, -14)">
+      <circle cx="16" cy="14" r="3.8" fill="none" stroke="#ffffff" stroke-width="1.3"/>
+      <circle cx="16" cy="14" r="1.4" fill="#ffffff"/>
+      <line x1="16" y1="8.5" x2="16" y2="10.2" stroke="#ffffff" stroke-width="1.1"/>
+      <line x1="16" y1="17.8" x2="16" y2="19.5" stroke="#ffffff" stroke-width="1.1"/>
+      <line x1="10.5" y1="14" x2="12.2" y2="14" stroke="#ffffff" stroke-width="1.1"/>
+      <line x1="19.8" y1="14" x2="21.5" y2="14" stroke="#ffffff" stroke-width="1.1"/>
+    </g>
+  `;
+
+  const joyfulSmileVisorSvg = `
+    <g transform="translate(16, 14) scale(0.85) translate(-16, -14)">
+      <path d="M 11 13 Q 13 10 15 13" fill="none" stroke="#ffffff" stroke-width="1.4" stroke-linecap="round"/>
+      <path d="M 17 13 Q 19 10 21 13" fill="none" stroke="#ffffff" stroke-width="1.4" stroke-linecap="round"/>
+      <path d="M 13 16 Q 16 18 19 16" fill="none" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round"/>
+    </g>
+  `;
+
+  const initialVisor = hasNextFloor ? stairsVisorSvg : targetVisorSvg;
+
+  // Create or replace Campy Mascot Robot Group (Enlarged size scale 1.9x)
+  let robotG = svg.querySelector('#campy-moving-robot');
+  if (!robotG) {
+    robotG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    robotG.setAttribute('id', 'campy-moving-robot');
+    robotG.setAttribute('style', 'cursor: pointer;');
+    robotG.onclick = function() {
+      if (hasNextFloor) {
+        showFloorMap(nextIdx);
+      } else {
+        mascotSpeechClick();
+      }
+    };
+
+    robotG.innerHTML = `
+      <!-- Speech Bubble Overlay cleanly elevated above Campy -->
+      <g id="campy-map-bubble" style="display:none;">
+        <rect x="-115" y="-88" width="230" height="38" rx="18" fill="rgba(14,22,38,0.96)" stroke="#ffffff" stroke-width="1.5" filter="drop-shadow(0 6px 16px rgba(0,0,0,0.7))"/>
+        <polygon points="-6,-50 6,-50 0,-42" fill="#ffffff"/>
+        <text x="0" y="-64" text-anchor="middle" fill="#ffffff" font-size="12.5" font-weight="800" font-family="system-ui, sans-serif" id="campy-bubble-txt"></text>
+      </g>
+      <!-- Shadow below Campy -->
+      <ellipse cx="0" cy="22" rx="16" ry="4" fill="rgba(0,0,0,0.5)"/>
+      <!-- Robot Inner Graphic (scale transition - Base scale 1.9x) -->
+      <g id="campy-inner-scale" transform="scale(1.9) translate(-16, -16)" style="transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+        <line x1="16" y1="7" x2="16" y2="3" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round"/>
+        <circle cx="16" cy="2.5" r="1.8" fill="#ffffff"/>
+        <rect x="5" y="11" width="3" height="7" rx="1.5" fill="#ffffff"/>
+        <rect x="24" y="11" width="3" height="7" rx="1.5" fill="#ffffff"/>
+        <rect x="7" y="6" width="18" height="17" rx="6" fill="#0f172a" stroke="#ffffff" stroke-width="1.8"/>
+        <rect x="9" y="9" width="14" height="10" rx="3" fill="#090d16" stroke="rgba(255,255,255,0.4)" stroke-width="0.8"/>
+        <g id="campy-visor-g">${initialVisor}</g>
+      </g>
+    `;
+    if (oldMover) {
+      oldMover.parentNode.replaceChild(robotG, oldMover);
+    } else {
+      svg.appendChild(robotG);
+    }
+  }
+
+  const len = path.getTotalLength();
+  const dist = (oldMover && parseFloat(oldMover.dataset.mesafe)) || 10;
+  const speed = 1.6;
+  const walkDuration = Math.max(2800, Math.min(9500, (dist / speed) * 1000));
+
+  let start = null;
+  let isArrived = false;
+
+  // Global restart handler for 🔄 button
+  currentMoverRestart = function() {
+    start = null;
+    isArrived = false;
+    const innerG = robotG.querySelector('#campy-inner-scale');
+    const visorG = robotG.querySelector('#campy-visor-g');
+    const bubble = robotG.querySelector('#campy-map-bubble');
+    if (innerG) innerG.setAttribute('transform', 'scale(1.9) translate(-16, -16)');
+    if (visorG) visorG.innerHTML = initialVisor;
+    if (bubble) bubble.style.display = 'none';
+    requestAnimationFrame(step);
+  };
+
+  function step(ts) {
+    if (!robotG.isConnected) return;
+    if (start === null) start = ts;
+
+    const elapsed = ts - start;
+    const bubble = robotG.querySelector('#campy-map-bubble');
+    const bubbleTxt = robotG.querySelector('#campy-bubble-txt');
+    const innerG = robotG.querySelector('#campy-inner-scale');
+    const visorG = robotG.querySelector('#campy-visor-g');
+
+    if (elapsed < walkDuration) {
+      // Walking along the path towards stairs / target
+      const progress = elapsed / walkDuration;
+      const pt = path.getPointAtLength(progress * len);
+      robotG.setAttribute('transform', `translate(${pt.x.toFixed(1)}, ${pt.y.toFixed(1)})`);
+      if (bubble) bubble.style.display = 'none';
+
+      // Dynamic Camera Tracking: Center view on Campy as he moves
+      if (isCamTrack && pzInstance) {
+        try {
+          const sizes = pzInstance.getSizes();
+          const zoom = sizes.realZoom;
+          const targetX = (sizes.width / 2) - (pt.x * zoom);
+          const targetY = (sizes.height / 2) - (pt.y * zoom);
+          pzInstance.pan({ x: targetX, y: targetY });
+        } catch (e) {}
+      }
+
+      requestAnimationFrame(step);
+    } else {
+      // Reached the end of path on current floor
+      const pt = path.getPointAtLength(len);
+      robotG.setAttribute('transform', `translate(${pt.x.toFixed(1)}, ${pt.y.toFixed(1)})`);
+
+      if (isCamTrack && pzInstance) {
+        try {
+          const sizes = pzInstance.getSizes();
+          const zoom = sizes.realZoom;
+          pzInstance.pan({ x: (sizes.width / 2) - (pt.x * zoom), y: (sizes.height / 2) - (pt.y * zoom) });
+        } catch (e) {}
+      }
+
+      if (hasNextFloor) {
+        // INTERMEDIATE FLOOR: Park at stairs with speech bubble transition prompt. DO NOT auto-loop back.
+        if (bubble && bubbleTxt) {
+          const nextStage = routeData.asamalar[nextIdx];
+          const isElevator = (currentStage.hedef || '').toUpperCase().includes('ASANSOR') || (currentStage.hedef || '').toUpperCase().includes('ASANSÖR');
+          const viaText = isElevator ? t.viaElevator : t.viaStairs;
+          const targetFloorText = nextStage.kat === 'zemin' ? t.floor0 : `${nextStage.kat.replace('kat', '')}. Kat`;
+          bubbleTxt.textContent = `${t.goToFloor} ${targetFloorText} (${viaText}) ➔`;
+          bubble.style.display = 'block';
+        }
+      } else {
+        // DESTINATION FLOOR: Arrived at final target room!
+        // Enlarge Campy (scale 2.6x), switch visor to happy closed-eyes smile ^ ‿ ^, show speech bubble above Campy!
+        if (!isArrived) {
+          isArrived = true;
+          if (innerG) innerG.setAttribute('transform', 'scale(2.6) translate(-16, -16)');
+          if (visorG) visorG.innerHTML = joyfulSmileVisorSvg;
+          if (bubble && bubbleTxt) {
+            const finalDestName = (currentStage && currentStage.hedef) ? currentStage.hedef : '';
+            bubbleTxt.textContent = `${t.arrived}: ${finalDestName}! 🎉`;
+            bubble.style.display = 'block';
+          }
+        }
+      }
+    }
+  }
+
+  requestAnimationFrame(step);
+}
+
+// ════════════════ DRAWER & ROUTE EDIT ════════════════
+function toggleDrawer() {
+  const d = document.getElementById('drawer');
+  const edit = document.getElementById('drawer-edit');
+  const icon = document.getElementById('drawer-toggle-icon');
+  if (d.classList.contains('collapsed')) {
+    d.classList.remove('collapsed');
+    edit.classList.add('show');
+    icon.textContent = '▼';
+  } else {
+    d.classList.add('collapsed');
+    edit.classList.remove('show');
+    icon.textContent = '▲';
+  }
+}
+
+function renderDrawerContent(d) {
+  // Written text directions removed per user request.
+  // The map view provides 100% visual navigation via animated path and walking dot.
+  const container = document.getElementById('drawer-directions');
+  if (container) {
+    container.innerHTML = '';
+  }
+}
+
+
+// ════════════════ MASCOT SPEECH & TOAST ════════════════
+const mascotGreetings = [
+  "Hoş geldiniz 👋",
+  "Welcome! 👋",
+  "أهلاً وسهلاً بك! 👋"
+];
+let mascotGreetingIdx = 0;
+
+function mascotSpeechClick() {
+  mascotGreetingIdx = (mascotGreetingIdx + 1) % mascotGreetings.length;
+  const bubble = document.getElementById('mascot-bubble');
+  if (bubble) {
+    bubble.textContent = mascotGreetings[mascotGreetingIdx];
+    bubble.style.animation = 'none';
+    bubble.offsetHeight;
+    bubble.style.animation = 'bubblePop 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+  }
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast-notice');
+  document.getElementById('toast-msg').textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3500);
+}
+
+function selectRoomFromMap(roomName) {
+  if (!roomName) return;
+  document.getElementById('inp-dest').value = roomName;
+  const editDest = document.getElementById('edit-dest');
+  if (editDest) editDest.value = roomName;
+
+  const toastText = (lang === 'ar') ? `🎯 تم اختيار الوجهة: ${roomName}` :
+                    (lang === 'tr') ? `🎯 Hedef seçildi: ${roomName}` :
+                    `🎯 Target set: ${roomName}`;
+  showToast(toastText);
+  startRoute();
+}
+</script>
+</body>
+</html>

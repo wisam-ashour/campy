@@ -1,0 +1,101 @@
+# -*- coding: utf-8 -*-
+"""
+Campy — Kampüs Rehberi
+Biruni öğrencileri için iç mekân yön bulma.
+Yapay zekâ çağrısı YOK — sadece harita. Hızlı ve limitsiz.
+"""
+
+import csv
+import os
+from datetime import datetime
+
+from flask import Flask, render_template, request, jsonify
+
+import navigasyon as nav
+
+# --- katları yükle (bir kez, başlangıçta) ---
+print("Kampüs planlari yukleniyor...")
+_z = nav.kat_yukle("zemin", "data/zemin.dxf")
+_k = nav.kat_yukle("kat1", "data/kat1.dxf")
+print(f"Zemin kat: {_z[0]} mekan | 1. kat: {_k[0]} mekan")
+print(f"Toplam: {len(nav.tum_mekanlar())} mekan")
+
+app = Flask(__name__)
+
+KAYIT_DOSYA = "kayit/kullanim.csv"
+os.makedirs("kayit", exist_ok=True)
+if not os.path.exists(KAYIT_DOSYA):
+    with open(KAYIT_DOSYA, "w", newline="", encoding="utf-8") as f:
+        csv.writer(f).writerow(["zaman", "baslangic", "hedef", "sonuc"])
+
+
+def _kaydet(baslangic, hedef, sonuc):
+    """Kullanım istatistiği. Kişisel veri YOK — sadece hangi mekân ne kadar istendi."""
+    try:
+        with open(KAYIT_DOSYA, "a", newline="", encoding="utf-8") as f:
+            csv.writer(f).writerow([
+                datetime.now().strftime("%Y-%m-%d %H:%M"),
+                baslangic, hedef, sonuc,
+            ])
+    except Exception:
+        pass   # kayıt tutulamazsa servis durmasın
+
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+
+@app.after_request
+def add_header(response):
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
+
+
+@app.route("/api/mekanlar")
+def mekanlar():
+    """Arama kutusu için tüm mekân listesi."""
+    return jsonify({"mekanlar": nav.tum_mekanlar()})
+
+
+@app.route("/api/rota", methods=["POST"])
+def rota():
+    veri = request.get_json() or {}
+    baslangic = (veri.get("baslangic") or "").strip()
+    hedef = (veri.get("hedef") or "").strip()
+    tercih = (veri.get("tercih") or "MERDIVEN").strip()
+
+    if not hedef:
+        return jsonify({"durum": "hata", "mesaj": "hedef_yok"})
+    if not baslangic:
+        baslangic = "START_POINT"
+    if baslangic == hedef:
+        return jsonify({"durum": "hata", "mesaj": "ayni_yer"})
+
+    sonuc = nav.rota(hedef, baslangic, tercih=tercih)
+    if sonuc is None:
+        _kaydet(baslangic, hedef, "bulunamadi")
+        return jsonify({"durum": "hata", "mesaj": "rota_yok"})
+
+    _kaydet(baslangic, hedef, "ok")
+    return jsonify({
+        "durum": "ok",
+        "tip": sonuc["tip"],
+        "mesafe": sonuc["mesafe"],
+        "dakika": sonuc["dakika"],
+        "gecis": sonuc.get("gecis"),
+        "baslangic": baslangic,
+        "hedef": hedef,
+        "asamalar": [
+            {"kat": a["kat"], "hedef": a["hedef"],
+             "mesafe": a["mesafe"], "svg": a["svg"], "yonlendirmeler": a.get("yonlendirmeler", [])}
+            for a in sonuc["asamalar"]
+        ],
+    })
+
+
+if __name__ == "__main__":
+    print("\nCampy calisiyor: http://127.0.0.1:5001\n")
+    app.run(host="0.0.0.0", port=5001, debug=False)
