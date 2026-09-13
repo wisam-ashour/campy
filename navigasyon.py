@@ -287,25 +287,22 @@ def _svg_ciz(kat, dugumler, bas_ad, hedef_ad, baslik, genislik=740):
         path_data = "M " + " L ".join(f"{sx(p[0]):.1f} {sy(p[1]):.1f}" for p in pts)
         s.append(f'<path d="{path_data}" fill="rgba(15, 23, 42, 0.75)" stroke="#38bdf8" stroke-width="1.8" stroke-linejoin="round" opacity="0.9"/>')
 
-    # Render room names & icons cleanly across floor plan (No text overlaps)
-    rendered_pts = []
+    # Render ALL room names crisply inside room walls without skipping
     for rm_ad, rm_pos in veri["rooms"].items():
         if rm_ad == "START_POINT":
             continue
         display_name = re.sub(r"\s+\d+$", "", rm_ad)
         rx, ry = sx(rm_pos[0]), sy(rm_pos[1])
         
-        # Prevent overlapping text tags (Minimum 55px separation for clean vector map)
-        if any(math.hypot(rx - px, ry - py) < 55 for px, py in rendered_pts):
-            continue
-        rendered_pts.append((rx, ry))
+        is_landmark = any(k in rm_ad.upper() for k in ["KÜTÜPHANE", "KUTUPHANE", "KAFE", "ÖĞRENCİ", "MESCİT", "GİRİŞ"])
+        font_sz = "5.5" if is_landmark else "4.6"
+        fill_col = "#38bdf8" if is_landmark else "rgba(255, 255, 255, 0.85)"
+        font_wt = "800" if is_landmark else "700"
 
-        icon = _oda_simgesi(rm_ad)
         s.append(f'<g class="room-label-tag">'
-                 f'<circle cx="{rx:.1f}" cy="{ry-8:.1f}" r="8" fill="rgba(15, 23, 42, 0.9)" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>'
-                 f'<text x="{rx:.1f}" y="{ry-5.5:.1f}" text-anchor="middle" font-size="7.5">{icon}</text>'
-                 f'<text x="{rx:.1f}" y="{ry+7:.1f}" text-anchor="middle" fill="rgba(255, 255, 255, 0.65)" '
-                 f'font-size="7.5" font-weight="700" font-family="system-ui, sans-serif">{display_name}</text>'
+                 f'<text x="{rx:.1f}" y="{ry:.1f}" text-anchor="middle" fill="{fill_col}" '
+                 f'font-size="{font_sz}" font-weight="{font_wt}" font-family="system-ui, sans-serif" '
+                 f'style="paint-order: stroke; stroke: #090d16; stroke-width: 1.2px; stroke-linejoin: round;">{display_name}</text>'
                  f'</g>')
 
     s.append(f'<path d="{d}" class="campy-route-path" fill="none" stroke="#10b981" stroke-width="4" '
