@@ -1646,26 +1646,7 @@ function recenterOnCampy() {
 // ════════════════ TRANSITION OVERLAY ════════════════
 function updateTransitionOverlay() {
   const overlay = document.getElementById('transition-overlay');
-  if (!overlay || !routeData || !routeData.asamalar) return;
-
-  const nextIdx = currentFloorIdx + 1;
-  const hasNextFloor = (nextIdx < routeData.asamalar.length);
-  const currentStage = routeData.asamalar[currentFloorIdx];
-  const t = T[lang];
-
-  if (hasNextFloor) {
-    const nextStage = routeData.asamalar[nextIdx];
-    const isElevator = (currentStage.hedef || '').toUpperCase().includes('ASANSOR') || (currentStage.hedef || '').toUpperCase().includes('ASANSÖR');
-    const viaText = isElevator ? t.viaElevator : t.viaStairs;
-    const targetFloorText = nextStage.kat === 'zemin' ? t.floor0 : `${nextStage.kat.replace('kat', '')}. Kat`;
-
-    const btnText = (lang === 'ar') ? `👇 اضغط هنا للانتقال إلى ${targetFloorText} (${viaText}) ➔` :
-                    (lang === 'tr') ? `👇 ${targetFloorText}'a geçmek için buraya dokunun (${viaText}) ➔` :
-                    `👇 Tap here to go to ${targetFloorText} (${viaText}) ➔`;
-
-    overlay.innerHTML = `<button class="transition-btn" onclick="showFloorMap(${nextIdx})">${btnText}</button>`;
-    overlay.style.display = 'block';
-  } else {
+  if (overlay) {
     overlay.style.display = 'none';
     overlay.innerHTML = '';
   }
@@ -1836,9 +1817,9 @@ function startMover(svg) {
             const targetFloorText = nextStage.kat === 'zemin' ? t.floor0 : `${nextStage.kat.replace('kat', '')}. Kat`;
             showDynamicCampyBubble(bubble, bubbleTxt, `👇 ${t.goToFloor} ${targetFloorText} (${viaText}) ➔`);
           }
-          const toastMsg = (lang === 'ar') ? "🪜 وصل كامبي إلى السلالم! اضغط على كامبي أو الزر بالأسفل للانتقال للطابق التالي" :
-                           (lang === 'tr') ? "🪜 Campy merdivenlere ulaştı! Sonraki kata geçmek için dokunun" :
-                           "🪜 Campy reached the stairs! Tap Campy or the bottom button to go to next floor";
+          const toastMsg = (lang === 'ar') ? "🪜 وصل كامبي إلى السلالم! اضغط على كامبي للانتقال للطابق التالي" :
+                           (lang === 'tr') ? "🪜 Campy merdivenlere ulaştı! Sonraki kata geçmek için Campy'ye dokunun" :
+                           "🪜 Campy reached the stairs! Tap Campy to go to next floor";
           showToast(toastMsg);
         }
       } else {
