@@ -50,6 +50,23 @@
   --radius-sm: 12px;
 }
 
+.union-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  padding: 6px 16px;
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 800;
+  margin: 0 auto 16px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  text-align: center;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -751,7 +768,10 @@ html, body {
 <div class="screen" id="s-lang">
   <div class="wizard-card" style="text-align: center">
 
-    <!-- Standalone Mascot Graphic (No Badge Above) -->
+    <!-- Arab Student Association Union Badge -->
+    <div class="union-badge" id="txt-union-badge">🎓 رابطة الطلبة العرب — جامعة بيروني</div>
+
+    <!-- Standalone Mascot Graphic -->
     <div class="mascot-hero-wrap" onclick="mascotSpeechClick()">
       <div class="mascot-speech-bubble" id="mascot-bubble">Hoş geldiniz 👋</div>
       <!-- Crisp Scalable Vector Mascot with Facial Expression Loop -->
@@ -838,6 +858,10 @@ html, body {
 <div class="screen hide" id="s-dest">
   <div class="wizard-card">
 
+    <div style="text-align: center; margin-bottom: 12px;">
+      <div class="union-badge">🎓 رابطة الطلبة العرب — جامعة بيروني</div>
+    </div>
+
     <!-- Top Header Navigation with Small Campy Mascot on Top Left -->
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
       <!-- Animated Campy Mascot on Top Left -->
@@ -908,6 +932,10 @@ html, body {
 <!-- ════════════════ SCREEN 3: ORIGIN ("Neredesin?") ════════════════ -->
 <div class="screen hide" id="s-origin">
   <div class="wizard-card">
+
+    <div style="text-align: center; margin-bottom: 12px;">
+      <div class="union-badge">🎓 رابطة الطلبة العرب — جامعة بيروني</div>
+    </div>
 
     <!-- Top Header Navigation with Animated Campy Mascot on Top Left -->
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
@@ -983,16 +1011,16 @@ html, body {
     <!-- Floor Selector Pills -->
     <div class="floor-badge" id="floor-badge"></div>
 
-    <!-- Building Info Badge (Floating Top Right) -->
     <div class="map-info-card" id="map-building-card" style="pointer-events:auto; padding: 8px 14px; border-radius: 16px;">
       <div style="display:flex; align-items:center; gap: 8px;">
-        <span style="font-size: 16px;">🏢</span>
+        <span style="font-size: 16px;">🎓</span>
         <div style="display:flex; flex-direction:column;">
-          <span style="font-size:12.5px; font-weight:800; color:var(--text-main);">Biruni University</span>
-          <span style="font-size:10.5px; font-weight:700; color:var(--accent-cyan);" id="building-floor-txt">Ground Floor</span>
+          <span style="font-size:12px; font-weight:800; color:var(--text-main);" id="txt-top-union">رابطة الطلبة العرب — جامعة بيروني</span>
+          <span style="font-size:10px; font-weight:700; color:var(--accent-cyan);" id="building-floor-txt">Ground Floor</span>
         </div>
       </div>
     </div>
+  </div>
   </div>
 
   <!-- Map Canvas -->
@@ -1055,7 +1083,7 @@ html, body {
 // ════════════════ TRANSLATIONS (I18N) ════════════════
 const T = {
   ar: {
-    unionBadge: "اتحاد طلاب جامعة بيروني",
+    unionBadge: "🎓 رابطة الطلبة العرب — جامعة بيروني",
     welcomeSub: "اعثر على قاعتك الدراسية في 5 ثوانٍ",
     whereTo: "إلى أين تريد الذهاب؟",
     destIntro: "اكتب رمز القاعة أو اختر من الأماكن الشائعة",
@@ -1065,9 +1093,9 @@ const T = {
     lblOrigin: "موقعك الحالي",
     destPlaceholder: "مثال: A120، B205، AZ05...",
     quickLabel: "الأماكن الأكثر زيارة",
-    library: "📚 المكتبة",
-    cafeteria: "☕ الكافتيريا",
-    studentAff: "🎓 شؤون الطلاب",
+    mosque: "🕌 المسجد",
+    stationery: "✏️ القرطاسية",
+    intlStudents: "🌐 شؤون الطلبة الدوليين",
     mainEntrance: "🚪 المدخل الرئيسي",
     startPoint: "🚪 المدخل الرئيسي",
     classrooms: "🏫 القاعات A120",
@@ -1091,7 +1119,7 @@ const T = {
     arrived: "لقد وصلت إلى وجهتك! 🎉"
   },
   tr: {
-    unionBadge: "Biruni Öğrenci Birliği",
+    unionBadge: "🎓 Biruni Üniversitesi Arap Öğrenciler Birliği",
     welcomeSub: "Kampüste sınıfını 5 saniyede bul",
     whereTo: "Nereye gitmek istiyorsun?",
     destIntro: "Sınıf kodunu yaz veya sık kullanılan mekan seç",
@@ -1101,9 +1129,9 @@ const T = {
     lblOrigin: "Şu Anki Konumun",
     destPlaceholder: "Örn: A120, B205, AZ05...",
     quickLabel: "Sık Kullanılan Mekanlar",
-    library: "📚 Kütüphane",
-    cafeteria: "☕ Kafeterya",
-    studentAff: "🎓 Öğrenci İşleri",
+    mosque: "🕌 Cami / Mescid",
+    stationery: "✏️ Kırtasiye",
+    intlStudents: "🌐 Uluslararası Öğrenci İşleri",
     mainEntrance: "🚪 Ana Giriş",
     startPoint: "🚪 Ana Giriş",
     classrooms: "🏫 Derslik A120",
@@ -1127,7 +1155,7 @@ const T = {
     arrived: "Hedefe ulaştınız! 🎉"
   },
   en: {
-    unionBadge: "Biruni Student Union",
+    unionBadge: "🎓 Biruni University — Arab Students Association",
     welcomeSub: "Find your room in 5 seconds",
     whereTo: "Where do you want to go?",
     destIntro: "Type room code or select popular destination",
@@ -1137,9 +1165,9 @@ const T = {
     lblOrigin: "Your Current Location",
     destPlaceholder: "e.g. A120, B205, AZ05...",
     quickLabel: "Popular Spots",
-    library: "📚 Library",
-    cafeteria: "☕ Cafeteria",
-    studentAff: "🎓 Student Affairs",
+    mosque: "🕌 Mosque",
+    stationery: "✏️ Stationery",
+    intlStudents: "🌐 International Student Affairs",
     mainEntrance: "🚪 Main Entrance",
     startPoint: "🚪 Main Entrance",
     classrooms: "🏫 Classroom A120",
@@ -1186,8 +1214,8 @@ function pickLang(l) {
 
 function applyLangToUI() {
   const t = T[lang];
-  const unionBadge = document.getElementById('txt-union-badge');
-  if (unionBadge) unionBadge.textContent = t.unionBadge;
+  const unionBadges = document.querySelectorAll('.union-badge, #txt-top-union');
+  unionBadges.forEach(b => { if (b) b.textContent = t.unionBadge; });
 
   // Screen 2: Destination
   const destTitle = document.getElementById('dest-title');
@@ -1229,13 +1257,13 @@ function applyLangToUI() {
   const btnEdit = document.getElementById('btn-edit');
   if (btnEdit) btnEdit.textContent = t.reStart;
 
-  // Destination Quick Chips
+  // Destination Quick Chips: Mosque, Stationery, International Student Affairs
   const destChips = document.getElementById('dest-chips');
   if (destChips) {
     destChips.innerHTML = `
-      <div class="chip" onclick="quickDest('KÜTÜPHANE Z1')">${t.library}</div>
-      <div class="chip" onclick="quickDest('QR KAFE')">${t.cafeteria}</div>
-      <div class="chip" onclick="quickDest('ÖĞRENCİ İŞLERİ')">${t.studentAff}</div>
+      <div class="chip" onclick="quickDest('CAMİ')">${t.mosque}</div>
+      <div class="chip" onclick="quickDest('KIRTASİYE')">${t.stationery}</div>
+      <div class="chip" onclick="quickDest('ULUSLARARASI ÖĞRENCİ İŞLERİ')">${t.intlStudents}</div>
     `;
   }
 
@@ -1489,7 +1517,7 @@ function handleSvgElementTap(x, y) {
   const target = document.elementFromPoint(x, y);
   if (!target) return;
 
-  // 1. Campy mascot or speech bubble tapped (Stairs next floor transition)
+  // Campy mascot or speech bubble tapped (Stairs next floor transition)
   const robotEl = target.closest('#campy-moving-robot') || target.closest('#campy-map-bubble');
   if (robotEl) {
     const nextIdx = currentFloorIdx + 1;
@@ -1498,16 +1526,6 @@ function handleSvgElementTap(x, y) {
       showFloorMap(nextIdx);
     } else {
       mascotSpeechClick();
-    }
-    return;
-  }
-
-  // 2. Interactive room label tapped (Instant route recalculation to clicked room)
-  const roomEl = target.closest('.room-label-interactive');
-  if (roomEl) {
-    const roomName = roomEl.getAttribute('data-room');
-    if (roomName) {
-      selectRoomFromMap(roomName);
     }
     return;
   }
@@ -1813,7 +1831,16 @@ function startMover(svg) {
           const isElevator = (currentStage.hedef || '').toUpperCase().includes('ASANSOR') || (currentStage.hedef || '').toUpperCase().includes('ASANSÖR');
           const viaText = isElevator ? t.viaElevator : t.viaStairs;
           const targetFloorText = nextStage.kat === 'zemin' ? t.floor0 : `${nextStage.kat.replace('kat', '')}. Kat`;
-          bubbleTxt.textContent = `${t.goToFloor} ${targetFloorText} (${viaText}) ➔`;
+          const msgStr = `${t.goToFloor} ${targetFloorText} (${viaText}) ➔`;
+          bubbleTxt.textContent = msgStr;
+
+          // Dynamically adjust bubble background rect width so text never overflows!
+          const approxW = Math.max(170, Math.min(380, msgStr.length * 8.5 + 36));
+          const rectEl = bubble.querySelector('rect');
+          if (rectEl) {
+            rectEl.setAttribute('width', approxW);
+            rectEl.setAttribute('x', -approxW / 2);
+          }
           bubble.style.display = 'block';
         }
       } else {
@@ -1825,7 +1852,16 @@ function startMover(svg) {
           if (visorG) visorG.innerHTML = joyfulSmileVisorSvg;
           if (bubble && bubbleTxt) {
             const finalDestName = (currentStage && currentStage.hedef) ? currentStage.hedef : '';
-            bubbleTxt.textContent = `${t.arrived}: ${finalDestName}! 🎉`;
+            const msgStr = `${t.arrived}: ${finalDestName}! 🎉`;
+            bubbleTxt.textContent = msgStr;
+
+            // Dynamically adjust bubble background rect width so text never overflows!
+            const approxW = Math.max(170, Math.min(380, msgStr.length * 8.5 + 36));
+            const rectEl = bubble.querySelector('rect');
+            if (rectEl) {
+              rectEl.setAttribute('width', approxW);
+              rectEl.setAttribute('x', -approxW / 2);
+            }
             bubble.style.display = 'block';
           }
         }

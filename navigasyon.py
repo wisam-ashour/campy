@@ -232,6 +232,12 @@ def _yonlendirme_olustur(dugumler):
 
 def _oda_simgesi(ad):
     u = ad.upper()
+    if "CAMİ" in u or "CAMI" in u or "MESCİD" in u or "MESCID" in u or "JAMI" in u or "MOSQUE" in u or "جامع" in u or "مسجد" in u:
+        return "🕌"
+    if "KIRTASİYE" in u or "KIRTASIYE" in u or "STATIONERY" in u or "قرطاسية" in u:
+        return "✏️"
+    if "INTERNATIONAL" in u or "ULUSLARARASI" in u or "دولي" in u:
+        return "🌐"
     if "KÜTÜPHANE" in u or "KUTUPHANE" in u:
         return "📚"
     if "KAFE" in u or "CAFETERIA" in u or "RESTORAN" in u:
@@ -287,7 +293,7 @@ def _svg_ciz(kat, dugumler, bas_ad, hedef_ad, baslik, genislik=740):
         path_data = "M " + " L ".join(f"{sx(p[0]):.1f} {sy(p[1]):.1f}" for p in pts)
         s.append(f'<path d="{path_data}" fill="rgba(15, 23, 42, 0.75)" stroke="#38bdf8" stroke-width="1.8" stroke-linejoin="round" opacity="0.9"/>')
 
-    # Render room names & icons cleanly across floor plan
+    # Render room names & icons cleanly across floor plan with 60px minimum distance (No overlapping text)
     rendered_pts = []
     for rm_ad, rm_pos in veri["rooms"].items():
         if rm_ad == "START_POINT":
@@ -295,13 +301,13 @@ def _svg_ciz(kat, dugumler, bas_ad, hedef_ad, baslik, genislik=740):
         display_name = re.sub(r"\s+\d+$", "", rm_ad)
         rx, ry = sx(rm_pos[0]), sy(rm_pos[1])
         
-        # Prevent overlapping text tags (min 22px SVG distance)
-        if any(math.hypot(rx - px, ry - py) < 22 for px, py in rendered_pts):
+        # Prevent overlapping text tags (min 60px SVG distance)
+        if any(math.hypot(rx - px, ry - py) < 60 for px, py in rendered_pts):
             continue
         rendered_pts.append((rx, ry))
 
         icon = _oda_simgesi(rm_ad)
-        s.append(f'<g class="room-label-interactive" data-room="{rm_ad}" onclick="selectRoomFromMap(\'{rm_ad}\')">'
+        s.append(f'<g class="room-label-static">'
                  f'<circle cx="{rx:.1f}" cy="{ry-8:.1f}" r="8.5" fill="rgba(15, 23, 42, 0.9)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>'
                  f'<text x="{rx:.1f}" y="{ry-5.5:.1f}" text-anchor="middle" font-size="7.5">{icon}</text>'
                  f'<text x="{rx:.1f}" y="{ry+7:.1f}" text-anchor="middle" fill="rgba(255, 255, 255, 0.70)" '
