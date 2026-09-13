@@ -1645,10 +1645,27 @@ function recenterOnCampy() {
 
 // ════════════════ TRANSITION OVERLAY ════════════════
 function updateTransitionOverlay() {
-  // Separate bottom floating overlay button removed per user request.
-  // Campy himself displays the interactive transition speech button right at the stairs on the map!
   const overlay = document.getElementById('transition-overlay');
-  if (overlay) {
+  if (!overlay || !routeData || !routeData.asamalar) return;
+
+  const nextIdx = currentFloorIdx + 1;
+  const hasNextFloor = (nextIdx < routeData.asamalar.length);
+  const currentStage = routeData.asamalar[currentFloorIdx];
+  const t = T[lang];
+
+  if (hasNextFloor) {
+    const nextStage = routeData.asamalar[nextIdx];
+    const isElevator = (currentStage.hedef || '').toUpperCase().includes('ASANSOR') || (currentStage.hedef || '').toUpperCase().includes('ASANSÖR');
+    const viaText = isElevator ? t.viaElevator : t.viaStairs;
+    const targetFloorText = nextStage.kat === 'zemin' ? t.floor0 : `${nextStage.kat.replace('kat', '')}. Kat`;
+
+    const btnText = (lang === 'ar') ? `👇 اضغط هنا للانتقال إلى ${targetFloorText} (${viaText}) ➔` :
+                    (lang === 'tr') ? `👇 ${targetFloorText}'a geçmek için buraya dokunun (${viaText}) ➔` :
+                    `👇 Tap here to go to ${targetFloorText} (${viaText}) ➔`;
+
+    overlay.innerHTML = `<button class="transition-btn" onclick="showFloorMap(${nextIdx})">${btnText}</button>`;
+    overlay.style.display = 'block';
+  } else {
     overlay.style.display = 'none';
     overlay.innerHTML = '';
   }
@@ -1717,10 +1734,12 @@ function startMover(svg) {
     };
 
     robotG.innerHTML = `
-      <!-- Speech Bubble Overlay cleanly elevated above Campy -->
+      <!-- Speech Bubble Overlay cleanly elevated above Campy with Pulsing Cyan Border -->
       <g id="campy-map-bubble" style="display:none;">
-        <rect x="-115" y="-88" width="230" height="38" rx="18" fill="rgba(14,22,38,0.96)" stroke="#ffffff" stroke-width="1.5" filter="drop-shadow(0 6px 16px rgba(0,0,0,0.7))"/>
-        <polygon points="-6,-50 6,-50 0,-42" fill="#ffffff"/>
+        <rect x="-115" y="-88" width="230" height="38" rx="18" fill="rgba(14,22,38,0.96)" stroke="#06b6d4" stroke-width="2" filter="drop-shadow(0 8px 24px rgba(6,182,212,0.6))">
+          <animate attributeName="stroke" values="#06b6d4;#10b981;#06b6d4" dur="1.2s" repeatCount="indefinite"/>
+        </rect>
+        <polygon points="-6,-50 6,-50 0,-42" fill="#06b6d4"/>
         <text x="0" y="-64" text-anchor="middle" fill="#ffffff" font-size="12.5" font-weight="800" font-family="system-ui, sans-serif" id="campy-bubble-txt"></text>
       </g>
       <!-- Shadow below Campy -->
@@ -1807,13 +1826,20 @@ function startMover(svg) {
       }
 
       if (hasNextFloor) {
-        // INTERMEDIATE FLOOR: Park at stairs with speech bubble transition prompt. DO NOT auto-loop back.
-        if (bubble && bubbleTxt) {
-          const nextStage = routeData.asamalar[nextIdx];
-          const isElevator = (currentStage.hedef || '').toUpperCase().includes('ASANSOR') || (currentStage.hedef || '').toUpperCase().includes('ASANSÖR');
-          const viaText = isElevator ? t.viaElevator : t.viaStairs;
-          const targetFloorText = nextStage.kat === 'zemin' ? t.floor0 : `${nextStage.kat.replace('kat', '')}. Kat`;
-          showDynamicCampyBubble(bubble, bubbleTxt, `${t.goToFloor} ${targetFloorText} (${viaText}) ➔`);
+        // INTERMEDIATE FLOOR: Park at stairs with glowing speech bubble + toast guidance prompt.
+        if (!isArrived) {
+          isArrived = true;
+          if (bubble && bubbleTxt) {
+            const nextStage = routeData.asamalar[nextIdx];
+            const isElevator = (currentStage.hedef || '').toUpperCase().includes('ASANSOR') || (currentStage.hedef || '').toUpperCase().includes('ASANSÖR');
+            const viaText = isElevator ? t.viaElevator : t.viaStairs;
+            const targetFloorText = nextStage.kat === 'zemin' ? t.floor0 : `${nextStage.kat.replace('kat', '')}. Kat`;
+            showDynamicCampyBubble(bubble, bubbleTxt, `👇 ${t.goToFloor} ${targetFloorText} (${viaText}) ➔`);
+          }
+          const toastMsg = (lang === 'ar') ? "🪜 وصل كامبي إلى السلالم! اضغط على كامبي أو الزر بالأسفل للانتقال للطابق التالي" :
+                           (lang === 'tr') ? "🪜 Campy merdivenlere ulaştı! Sonraki kata geçmek için dokunun" :
+                           "🪜 Campy reached the stairs! Tap Campy or the bottom button to go to next floor";
+          showToast(toastMsg);
         }
       } else {
         // DESTINATION FLOOR: Arrived at final target room!
