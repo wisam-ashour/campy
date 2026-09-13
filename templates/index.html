@@ -50,22 +50,6 @@
   --radius-sm: 12px;
 }
 
-.watermark-bg {
-  position: fixed;
-  bottom: 14px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 5;
-  color: rgba(255, 255, 255, 0.22);
-  font-size: 13.5px;
-  font-weight: 800;
-  pointer-events: none;
-  white-space: nowrap;
-  user-select: none;
-  font-family: var(--font-ar);
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.65);
-}
-
 * {
   box-sizing: border-box;
   margin: 0;
@@ -763,12 +747,14 @@ html, body {
 </head>
 <body>
 
-<!-- Semi-transparent Watermark Branding across background -->
-<div class="watermark-bg" id="txt-watermark">رابطة الطلبة العرب — جامعة بيروني</div>
-
 <!-- ════════════════ SCREEN 1: WELCOME & LANGUAGE ════════════════ -->
 <div class="screen" id="s-lang">
   <div class="wizard-card" style="text-align: center">
+
+    <!-- Arab Student Association Badge -->
+    <div style="display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.08); border:1.5px solid var(--card-border); color:var(--accent-cyan); padding:8px 18px; border-radius:99px; font-size:13px; font-weight:800; margin-bottom:14px; backdrop-filter:blur(10px);">
+      <span>🎓</span> <span class="union-badge-txt">رابطة الطلبة العرب - جامعة بيروني</span>
+    </div>
 
     <!-- Standalone Mascot Graphic -->
     <div class="mascot-hero-wrap" onclick="mascotSpeechClick()">
@@ -1002,16 +988,16 @@ html, body {
     <!-- Floor Selector Pills -->
     <div class="floor-badge" id="floor-badge"></div>
 
+    <!-- Building Info Badge (Floating Top Right) -->
     <div class="map-info-card" id="map-building-card" style="pointer-events:auto; padding: 8px 14px; border-radius: 16px;">
       <div style="display:flex; align-items:center; gap: 8px;">
         <span style="font-size: 16px;">🎓</span>
         <div style="display:flex; flex-direction:column;">
-          <span style="font-size:12px; font-weight:800; color:var(--text-main);" id="txt-top-union">رابطة الطلبة العرب — جامعة بيروني</span>
-          <span style="font-size:10px; font-weight:700; color:var(--accent-cyan);" id="building-floor-txt">Ground Floor</span>
+          <span style="font-size:12px; font-weight:800; color:var(--text-main);" class="union-badge-txt">رابطة الطلبة العرب - جامعة بيروني</span>
+          <span style="font-size:10.5px; font-weight:700; color:var(--accent-cyan);" id="building-floor-txt">Ground Floor</span>
         </div>
       </div>
     </div>
-  </div>
   </div>
 
   <!-- Map Canvas -->
@@ -1074,7 +1060,7 @@ html, body {
 // ════════════════ TRANSLATIONS (I18N) ════════════════
 const T = {
   ar: {
-    unionBadge: "🎓 رابطة الطلبة العرب — جامعة بيروني",
+    unionBadge: "رابطة الطلبة العرب - جامعة بيروني",
     welcomeSub: "اعثر على قاعتك الدراسية في 5 ثوانٍ",
     whereTo: "إلى أين تريد الذهاب؟",
     destIntro: "اكتب رمز القاعة أو اختر من الأماكن الشائعة",
@@ -1084,9 +1070,9 @@ const T = {
     lblOrigin: "موقعك الحالي",
     destPlaceholder: "مثال: A120، B205، AZ05...",
     quickLabel: "الأماكن الأكثر زيارة",
-    mosque: "🕌 المسجد",
+    mosque: "🕌 الجامع",
     stationery: "✏️ القرطاسية",
-    intlStudents: "🌐 شؤون الطلبة الدوليين",
+    internationalAffairs: "🌐 شؤون الطلبة الدوليين",
     mainEntrance: "🚪 المدخل الرئيسي",
     startPoint: "🚪 المدخل الرئيسي",
     classrooms: "🏫 القاعات A120",
@@ -1110,7 +1096,7 @@ const T = {
     arrived: "لقد وصلت إلى وجهتك! 🎉"
   },
   tr: {
-    unionBadge: "🎓 Biruni Üniversitesi Arap Öğrenciler Birliği",
+    unionBadge: "Biruni Üniversitesi Arap Öğrenciler Birliği",
     welcomeSub: "Kampüste sınıfını 5 saniyede bul",
     whereTo: "Nereye gitmek istiyorsun?",
     destIntro: "Sınıf kodunu yaz veya sık kullanılan mekan seç",
@@ -1120,12 +1106,12 @@ const T = {
     lblOrigin: "Şu Anki Konumun",
     destPlaceholder: "Örn: A120, B205, AZ05...",
     quickLabel: "Sık Kullanılan Mekanlar",
-    mosque: "🕌 Cami / Mescid",
+    mosque: "🕌 Mescit",
     stationery: "✏️ Kırtasiye",
-    intlStudents: "🌐 Uluslararası Öğrenci İşleri",
-    mainEntrance: "🚪 Ana Giriş",
-    startPoint: "🚪 Ana Giriş",
-    classrooms: "🏫 Derslik A120",
+    internationalAffairs: "🌐 Uluslararası Öğrenci İşleri",
+    mainEntrance: "Ana Giriş",
+    startPoint: "Ana Giriş",
+    classrooms: "Derslik A120",
     btnNext: "İleri",
     btnStartNav: "Navigasyonu Başlat",
     backLang: "← Dil Seçimi",
@@ -1146,7 +1132,7 @@ const T = {
     arrived: "Hedefe ulaştınız! 🎉"
   },
   en: {
-    unionBadge: "🎓 Biruni University — Arab Students Association",
+    unionBadge: "Biruni University Arab Students Association",
     welcomeSub: "Find your room in 5 seconds",
     whereTo: "Where do you want to go?",
     destIntro: "Type room code or select popular destination",
@@ -1156,12 +1142,12 @@ const T = {
     lblOrigin: "Your Current Location",
     destPlaceholder: "e.g. A120, B205, AZ05...",
     quickLabel: "Popular Spots",
-    mosque: "🕌 Mosque",
-    stationery: "✏️ Stationery",
-    intlStudents: "🌐 International Student Affairs",
-    mainEntrance: "🚪 Main Entrance",
-    startPoint: "🚪 Main Entrance",
-    classrooms: "🏫 Classroom A120",
+    mosque: "🕌 Mosque / Prayer Room",
+    stationery: "✏️ Stationery / Copy Center",
+    internationalAffairs: "🌐 International Student Office",
+    mainEntrance: "Main Entrance",
+    startPoint: "Main Entrance",
+    classrooms: "Classroom A120",
     btnNext: "Next",
     btnStartNav: "Start Navigation",
     backLang: "← Language",
@@ -1205,11 +1191,7 @@ function pickLang(l) {
 
 function applyLangToUI() {
   const t = T[lang];
-  const watermark = document.getElementById('txt-watermark');
-  if (watermark) watermark.textContent = t.unionBadge;
-
-  const topUnion = document.getElementById('txt-top-union');
-  if (topUnion) topUnion.textContent = t.unionBadge;
+  document.querySelectorAll('.union-badge-txt').forEach(el => el.textContent = t.unionBadge);
 
   // Screen 2: Destination
   const destTitle = document.getElementById('dest-title');
@@ -1251,13 +1233,13 @@ function applyLangToUI() {
   const btnEdit = document.getElementById('btn-edit');
   if (btnEdit) btnEdit.textContent = t.reStart;
 
-  // Destination Quick Chips: Mosque, Stationery, International Student Affairs
+  // Destination Quick Chips: Mosque, Stationery, International Student Office
   const destChips = document.getElementById('dest-chips');
   if (destChips) {
     destChips.innerHTML = `
-      <div class="chip" onclick="quickDestByKeyword('CAMİ')">${t.mosque}</div>
-      <div class="chip" onclick="quickDestByKeyword('KIRTASİYE')">${t.stationery}</div>
-      <div class="chip" onclick="quickDestByKeyword('ULUSLARARASI')">${t.intlStudents}</div>
+      <div class="chip" onclick="quickDest('MESCİT')">${t.mosque}</div>
+      <div class="chip" onclick="quickDest('KIRTASİYE')">${t.stationery}</div>
+      <div class="chip" onclick="quickDest('ULUSLARARASI ÖĞRENCİ')">${t.internationalAffairs}</div>
     `;
   }
 
@@ -1289,13 +1271,6 @@ function resetToHome() {
   document.getElementById('s-origin').classList.add('hide');
   document.getElementById('s-dest').classList.remove('hide');
   document.getElementById('s-lang').classList.add('hide');
-}
-
-function quickDestByKeyword(kw) {
-  const kwUpper = kw.toUpperCase();
-  const match = MEKANLAR.find(m => m.toUpperCase().includes(kwUpper)) || kw;
-  document.getElementById('inp-dest').value = match;
-  goToOrigin();
 }
 
 function quickDest(v) {
@@ -1528,7 +1503,6 @@ function handleSvgElementTap(x, y) {
     } else {
       mascotSpeechClick();
     }
-    return;
   }
 }
 
@@ -1832,17 +1806,7 @@ function startMover(svg) {
           const isElevator = (currentStage.hedef || '').toUpperCase().includes('ASANSOR') || (currentStage.hedef || '').toUpperCase().includes('ASANSÖR');
           const viaText = isElevator ? t.viaElevator : t.viaStairs;
           const targetFloorText = nextStage.kat === 'zemin' ? t.floor0 : `${nextStage.kat.replace('kat', '')}. Kat`;
-          const msgStr = `${t.goToFloor} ${targetFloorText} (${viaText}) ➔`;
-          bubbleTxt.textContent = msgStr;
-
-          // Dynamically adjust bubble background rect width so text never overflows!
-          const approxW = Math.max(170, Math.min(380, msgStr.length * 8.5 + 36));
-          const rectEl = bubble.querySelector('rect');
-          if (rectEl) {
-            rectEl.setAttribute('width', approxW);
-            rectEl.setAttribute('x', -approxW / 2);
-          }
-          bubble.style.display = 'block';
+          showDynamicCampyBubble(bubble, bubbleTxt, `${t.goToFloor} ${targetFloorText} (${viaText}) ➔`);
         }
       } else {
         // DESTINATION FLOOR: Arrived at final target room!
@@ -1853,17 +1817,7 @@ function startMover(svg) {
           if (visorG) visorG.innerHTML = joyfulSmileVisorSvg;
           if (bubble && bubbleTxt) {
             const finalDestName = (currentStage && currentStage.hedef) ? currentStage.hedef : '';
-            const msgStr = `${t.arrived}: ${finalDestName}! 🎉`;
-            bubbleTxt.textContent = msgStr;
-
-            // Dynamically adjust bubble background rect width so text never overflows!
-            const approxW = Math.max(170, Math.min(380, msgStr.length * 8.5 + 36));
-            const rectEl = bubble.querySelector('rect');
-            if (rectEl) {
-              rectEl.setAttribute('width', approxW);
-              rectEl.setAttribute('x', -approxW / 2);
-            }
-            bubble.style.display = 'block';
+            showDynamicCampyBubble(bubble, bubbleTxt, `${t.arrived}: ${finalDestName}! 🎉`);
           }
         }
       }
@@ -1871,6 +1825,19 @@ function startMover(svg) {
   }
 
   requestAnimationFrame(step);
+}
+
+function showDynamicCampyBubble(bubble, bubbleTxt, str) {
+  if (!bubble || !bubbleTxt) return;
+  bubbleTxt.textContent = str;
+  const rect = bubble.querySelector('rect');
+  if (rect) {
+    const calculatedWidth = Math.min(340, Math.max(240, str.length * 8.5 + 44));
+    const halfW = calculatedWidth / 2;
+    rect.setAttribute('x', -halfW);
+    rect.setAttribute('width', calculatedWidth);
+  }
+  bubble.style.display = 'block';
 }
 
 // ════════════════ DRAWER & ROUTE EDIT ════════════════
