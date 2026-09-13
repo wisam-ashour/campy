@@ -287,12 +287,13 @@ def _svg_ciz(kat, dugumler, bas_ad, hedef_ad, baslik, genislik=740):
         path_data = "M " + " L ".join(f"{sx(p[0]):.1f} {sy(p[1]):.1f}" for p in pts)
         s.append(f'<path d="{path_data}" fill="rgba(15, 23, 42, 0.75)" stroke="#38bdf8" stroke-width="1.8" stroke-linejoin="round" opacity="0.9"/>')
 
-    # Render ALL room names crisply inside room walls without skipping
+    # Render ALL room names & icons crisply inside room walls without skipping
     for rm_ad, rm_pos in veri["rooms"].items():
         if rm_ad == "START_POINT":
             continue
         display_name = re.sub(r"\s+\d+$", "", rm_ad)
         rx, ry = sx(rm_pos[0]), sy(rm_pos[1])
+        icon = _oda_simgesi(rm_ad)
         
         is_landmark = any(k in rm_ad.upper() for k in ["KÜTÜPHANE", "KUTUPHANE", "KAFE", "ÖĞRENCİ", "MESCİT", "GİRİŞ"])
         font_sz = "5.5" if is_landmark else "4.6"
@@ -300,7 +301,8 @@ def _svg_ciz(kat, dugumler, bas_ad, hedef_ad, baslik, genislik=740):
         font_wt = "800" if is_landmark else "700"
 
         s.append(f'<g class="room-label-tag">'
-                 f'<text x="{rx:.1f}" y="{ry:.1f}" text-anchor="middle" fill="{fill_col}" '
+                 f'<text x="{rx:.1f}" y="{ry-4.5:.1f}" text-anchor="middle" font-size="5.2">{icon}</text>'
+                 f'<text x="{rx:.1f}" y="{ry+4.5:.1f}" text-anchor="middle" fill="{fill_col}" '
                  f'font-size="{font_sz}" font-weight="{font_wt}" font-family="system-ui, sans-serif" '
                  f'style="paint-order: stroke; stroke: #090d16; stroke-width: 1.2px; stroke-linejoin: round;">{display_name}</text>'
                  f'</g>')
