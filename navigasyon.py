@@ -419,11 +419,74 @@ def _svg_ciz(kat, dugumler, bas_ad, hedef_ad, baslik, genislik=740):
     return "\n".join(s)
 
 
+def _en_yakin_wc(baslangic_ad, wc_type):
+    """Öğrencinin bulunduğu kata/konuma en yakın WC'yi bulur."""
+    bas_kat = mekan_kati(baslangic_ad) or "zemin"
+    u_type = (wc_type or "").upper()
+    candidates = []
+
+    if bas_kat in _KATLAR:
+        for rm in _KATLAR[bas_kat]["rooms"]:
+            u_rm = rm.upper()
+            if "WC" in u_rm:
+                if "ERKEK" in u_type and "ERKEK" in u_rm:
+                    candidates.append((bas_kat, rm))
+                elif "KADIN" in u_type and "KADIN" in u_rm:
+                    candidates.append((bas_kat, rm))
+                elif "ENGELL" in u_type and "ENGELL" in u_rm:
+                    candidates.append((bas_kat, rm))
+                elif not any(k in u_type for k in ["ERKEK", "KADIN", "ENGELL"]):
+                    candidates.append((bas_kat, rm))
+
+    if not candidates:
+        for kat, data in _KATLAR.items():
+            for rm in data["rooms"]:
+                u_rm = rm.upper()
+                if "WC" in u_rm:
+                    if "ERKEK" in u_type and "ERKEK" in u_rm:
+                        candidates.append((kat, rm))
+                    elif "KADIN" in u_type and "KADIN" in u_rm:
+                        candidates.append((kat, rm))
+                    elif "ENGELL" in u_type and "ENGELL" in u_rm:
+                        candidates.append((kat, rm))
+                    elif not any(k in u_type for k in ["ERKEK", "KADIN", "ENGELL"]):
+                        candidates.append((kat, rm))
+
+    if not candidates:
+        return None
+
+    best_cand = None
+    min_dist = float("inf")
+    for kat, rm in candidates:
+        if kat == bas_kat and baslangic_ad in _KATLAR[bas_kat]["rooms"]:
+            d_list, m = _yol(kat, baslangic_ad, rm)
+            if d_list and m < min_dist:
+                min_dist = m
+                best_cand = rm
+        else:
+            pos_b = _KATLAR[bas_kat]["rooms"].get(baslangic_ad, (0, 0)) if bas_kat in _KATLAR else (0, 0)
+            pos_r = _KATLAR[kat]["rooms"].get(rm, (0, 0))
+            m = _mesafe(pos_b, pos_r) + (abs(_kat_degeri(bas_kat) - _kat_degeri(kat)) * 20.0)
+            if m < min_dist:
+                min_dist = m
+                best_cand = rm
+
+    return best_cand or candidates[0][1]
+
+
 def rota(hedef_ad, baslangic_ad="START_POINT", tercih="MERDIVEN"):
     """Herhangi bir mekândan herhangi bir mekâna rota.
     Aynı kattaysa tek harita, farklı kattaysa merdiven/asansör üzerinden iki aşama."""
-    hedef_ad = _gercek_mekan_ad(hedef_ad)
     baslangic_ad = _gercek_mekan_ad(baslangic_ad)
+
+    # Generic WC request handling: find closest WC to student's current floor/location
+    u_h = (hedef_ad or "").upper()
+    if "WC" in u_h or any(k in u_h for k in ["HAMAM", "TOALET", "RESTROOM", "BATHROOM", "TUALET"]):
+        en_yakin = _en_yakin_wc(baslangic_ad, hedef_ad)
+        if en_yakin:
+            hedef_ad = en_yakin
+
+    hedef_ad = _gercek_mekan_ad(hedef_ad)
     hedef_kat = mekan_kati(hedef_ad)
     bas_kat = mekan_kati(baslangic_ad)
     if hedef_kat is None or bas_kat is None:
