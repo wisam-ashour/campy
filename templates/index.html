@@ -1307,13 +1307,13 @@ function applyLangToUI() {
   if (destChips) {
     destChips.className = 'chips-grid';
     destChips.innerHTML = `
-      <div class="quick-card" onclick="quickDest('MESCIT')">${t.quickMescit}</div>
+      <div class="quick-card" onclick="quickDest('BAY MESCIT')">${t.quickMescit}</div>
       <div class="quick-card" onclick="quickDest('KIRTASIYE')">${t.quickKirtasiye}</div>
-      <div class="quick-card" onclick="quickDest('REVİR')">${t.quickRevir}</div>
-      <div class="quick-card" onclick="quickDest('ULUSLARARASI')">${t.quickIntStudent}</div>
+      <div class="quick-card" onclick="quickDest('REVİR Z1')">${t.quickRevir}</div>
+      <div class="quick-card" onclick="quickDest('ULUSLARARASI OFİS')">${t.quickIntStudent}</div>
       <div class="quick-card" onclick="quickDest('ÖĞRENCİ İŞLERİ')">${t.quickStudentAffairs}</div>
-      <div class="quick-card" onclick="quickDest('KÜTÜPHANE')">${t.quickLibrary}</div>
-      <div class="quick-card" onclick="quickDest('KONFERANS')">${t.quickConference}</div>
+      <div class="quick-card" onclick="quickDest('KÜTÜPHANE Z1')">${t.quickLibrary}</div>
+      <div class="quick-card" onclick="quickDest('KONFERANS SALONU')">${t.quickConference}</div>
       <div class="quick-card" onclick="quickDest('SPOR SALON')">${t.quickSports}</div>
     `;
   }
@@ -1348,12 +1348,182 @@ function resetToHome() {
   document.getElementById('s-lang').classList.add('hide');
 }
 
+// ════════════════ MULTILINGUAL ALIASES & SEARCH HELPERS ════════════════
+function normStr(str) {
+  if (!str) return '';
+  return str.toString().toLowerCase()
+    .replace(/[أإآء]/g, 'ا')
+    .replace(/ة/g, 'ه')
+    .replace(/ى/g, 'ي')
+    .replace(/[çÇ]/g, 'c')
+    .replace(/[ğĞ]/g, 'g')
+    .replace(/[ıİI]/g, 'i')
+    .replace(/[öÖ]/g, 'o')
+    .replace(/[şŞ]/g, 's')
+    .replace(/[üÜ]/g, 'u')
+    .replace(/[-\s_]/g, '');
+}
+
+const SEARCH_ALIASES = [
+  // Mosque / Mescit / المصلى والجامع
+  {
+    target: 'BAY MESCIT',
+    aliases: ['مسجد', 'مصلى', 'جامع', 'صلاة', 'صلاه', 'mescit', 'cami', 'mosque', 'prayer', 'bay mescit'],
+    label: { ar: '🕌 المصلى والجامع (رجال)', tr: '🕌 Mescit (Bay)', en: '🕌 Prayer Room (Men)' }
+  },
+  {
+    target: 'BAYAN MESCIT',
+    aliases: ['مسجد نساء', 'مصلى نساء', 'جامع نساء', 'صلاة نساء', 'صلاه نساء', 'bayan mescit', 'women prayer'],
+    label: { ar: '🕌 المصلى والجامع (نساء)', tr: '🕌 Mescit (Bayan)', en: '🕌 Prayer Room (Women)' }
+  },
+
+  // Library / Kütüphane / المكتبة
+  {
+    target: 'KÜTÜPHANE Z1',
+    aliases: ['مكتبة', 'المكتبة', 'مكتبه', 'كتب', 'دراسة', 'قراءة', 'kutuphane', 'kütüphane', 'library', 'study'],
+    label: { ar: '📚 المكتبة المركزية (الأرضي Z1)', tr: '📚 Merkez Kütüphane (Zemin Z1)', en: '📚 Central Library (Ground Z1)' }
+  },
+  {
+    target: 'KÜTÜPHANE Z2',
+    aliases: ['مكتبة z2', 'kütüphane z2', 'library z2'],
+    label: { ar: '📚 المكتبة المركزية (الأرضي Z2)', tr: '📚 Merkez Kütüphane (Zemin Z2)', en: '📚 Central Library (Ground Z2)' }
+  },
+  {
+    target: 'KÜTÜPHANE -3',
+    aliases: ['مكتبة بدروم', 'kütüphane -3', 'library basement'],
+    label: { ar: '📚 المكتبة المركزية (طابق -3)', tr: '📚 Kütüphane (Bodrum -3)', en: '📚 Library (Basement -3)' }
+  },
+
+  // Student Affairs / Öğrenci İşleri / شؤون الطلاب
+  {
+    target: 'ÖĞRENCİ İŞLERİ',
+    aliases: ['شؤون', 'شؤون الطلاب', 'شؤون طلبة', 'تسجيل', 'تسجيل المواد', 'وثائق', 'ارتقاء', 'ogrenci isleri', 'öğrenci işleri', 'student affairs', 'registration'],
+    label: { ar: '🏛️ شؤون الطلاب العامة', tr: '🏛️ Öğrenci İşleri Genel', en: '🏛️ General Student Affairs' }
+  },
+  {
+    target: 'ULUSLARARASI OFİS',
+    aliases: ['شؤون دوليين', 'طلاب دوليين', 'أجانب', 'اقامة', 'إقامة', 'خارجية', 'uluslararasi', 'uluslararası', 'international students', 'foreign office'],
+    label: { ar: '🎓 شؤون الطلاب الدوليين', tr: '🎓 Uluslararası Öğrenci İşleri', en: '🎓 International Student Affairs' }
+  },
+
+  // Medical Clinic & Emergency / Revir / العيادة الطبية والطوارئ
+  {
+    target: 'REVİR Z1',
+    aliases: ['عيادة', 'العيادة', 'عياده', 'طوارئ', 'طبيب', 'دكتور', 'إسعاف', 'اسعاف', 'صحة', 'صحه', 'ممرض', 'revir', 'acil', 'saglik', 'sağlık', 'clinic', 'medical', 'emergency', 'doctor'],
+    label: { ar: '🩺 العيادة الطبية والطوارئ', tr: '🩺 Revir & Acil Müdahale', en: '🩺 Medical Clinic & Emergency' }
+  },
+
+  // Stationery & Printing / Kırtasiye / القرطاسية والطباعة
+  {
+    target: 'KIRTASIYE',
+    aliases: ['قرطاسية', 'القرطاسية', 'قرطاسيه', 'طباعة', 'مكتبة طباعة', 'تصوير', 'ورق', 'قلم', 'kirtasiye', 'kırtasiye', 'baski', 'baskı', 'stationery', 'print', 'copy'],
+    label: { ar: '✏️ القرطاسية والطباعة', tr: '✏️ Kırtasiye & Baskı Center', en: '✏️ Stationery & Print Center' }
+  },
+
+  // Conference & Events / Konferans / قاعة المؤتمرات
+  {
+    target: 'KONFERANS SALONU',
+    aliases: ['مؤتمرات', 'قاعة مؤتمرات', 'فعاليات', 'ندوة', 'مسرح', 'konferans', 'etkinlik', 'salon', 'conference', 'auditorium', 'event'],
+    label: { ar: '🎭 قاعة المؤتمرات والفعاليات', tr: '🎭 Konferans Salonu', en: '🎭 Conference & Event Hall' }
+  },
+  {
+    target: 'BORDO SALON AB308',
+    aliases: ['القاعة العنابية', 'bordo salon', 'burgundy hall'],
+    label: { ar: '🎭 القاعة العنابية (Bordo Salon -3)', tr: '🎭 Bordo Salon (Bodrum -3)', en: '🎭 Bordo Hall (Basement -3)' }
+  },
+  {
+    target: 'GRI SALON AB305',
+    aliases: ['القاعة الرمادية', 'gri salon', 'grey hall'],
+    label: { ar: '🎭 القاعة الرمادية (Gri Salon -3)', tr: '🎭 Gri Salon (Bodrum -3)', en: '🎭 Grey Hall (Basement -3)' }
+  },
+  {
+    target: 'MAVI SALON AB304',
+    aliases: ['القاعة الزرقاء', 'mavi salon', 'blue hall'],
+    label: { ar: '🎭 القاعة الزرقاء (Mavi Salon -3)', tr: '🎭 Mavi Salon (Bodrum -3)', en: '🎭 Blue Hall (Basement -3)' }
+  },
+  {
+    target: 'TURKUAZ SALON AB307',
+    aliases: ['قاعة التيركواز', 'turkuaz salon', 'turquoise hall'],
+    label: { ar: '🎭 قاعة التيركواز (Turkuaz Salon -3)', tr: '🎭 Turkuaz Salon (Bodrum -3)', en: '🎭 Turquoise Hall (Basement -3)' }
+  },
+  {
+    target: 'TURUNCU SALON AB306',
+    aliases: ['القاعة البرتقالية', 'turuncu salon', 'orange hall'],
+    label: { ar: '🎭 القاعة البرتقالية (Turuncu Salon -3)', tr: '🎭 Turuncu Salon (Bodrum -3)', en: '🎭 Orange Hall (Basement -3)' }
+  },
+  {
+    target: 'YEŞİL SALON AB303',
+    aliases: ['القاعة الخضراء', 'yesil salon', 'green hall'],
+    label: { ar: '🎭 القاعة الخضراء (Yeşil Salon -3)', tr: '🎭 Yeşil Salon (Bodrum -3)', en: '🎭 Green Hall (Basement -3)' }
+  },
+
+  // Sports & Gym / Spor / الرياضة والملعب
+  {
+    target: 'SPOR SALON',
+    aliases: ['رياضة', 'الرياضة', 'رياضه', 'ملعب', 'صالة رياضة', 'جيم', 'كرة', 'spor', 'saha', 'gym', 'sports', 'fitness'],
+    label: { ar: '⚽ الصالة الرياضية والملعب', tr: '⚽ Spor Salonu & Saha', en: '⚽ Sports Hall & Gym' }
+  },
+
+  // Dining & Cafes / المطعم والكافيهات
+  {
+    target: 'YEMEKHANE',
+    aliases: ['مطعم', 'المطعم', 'أكل', 'وجبات', 'طعام', 'غداء', 'كافتيريا', 'yemekhane', 'cafeteria', 'canteen', 'dining'],
+    label: { ar: '🍽️ المطعم المركزي (Yemekhane)', tr: '🍽️ Merkez Yemekhane', en: '🍽️ Central Dining Hall' }
+  },
+  {
+    target: 'MADO',
+    aliases: ['كافيه', 'مادو', 'قهوة', 'شاي', 'mado', 'cafe', 'coffee'],
+    label: { ar: '☕ كافيه مادو (MADO)', tr: '☕ MADO Kafe', en: '☕ MADO Cafe' }
+  },
+  {
+    target: 'QR KAFE',
+    aliases: ['كافيه qr', 'qr kafe', 'qr cafe'],
+    label: { ar: '☕ QR كافيه', tr: '☕ QR Kafe', en: '☕ QR Cafe' }
+  },
+  {
+    target: 'B CAFE',
+    aliases: ['b cafe', 'b كافيه'],
+    label: { ar: '☕ B كافيه', tr: '☕ B Kafe', en: '☕ B Cafe' }
+  },
+
+  // Financial Affairs / الشؤون المالية
+  {
+    target: 'MALİ İŞLER',
+    aliases: ['مالية', 'المالية', 'الشؤون المالية', 'أقساط', 'دفع', 'محاسبة', 'mali isler', 'mali işler', 'finance', 'accounting'],
+    label: { ar: '💳 الشؤون المالية', tr: '💳 Mali İşler', en: '💳 Financial Affairs' }
+  },
+
+  // IT Dept / تكنولوجيا المعلومات
+  {
+    target: 'BİLGİ İŞLEM',
+    aliases: ['كمبيوتر', 'تكنولوجيا', 'شبكات', 'إنترنت', 'انترنت', 'مساعدة', 'bilgi islem', 'bilgi işlem', 'it', 'support'],
+    label: { ar: '💻 قسم تكنولوجيا المعلومات', tr: '💻 Bilgi İşlem Daire Bşk.', en: '💻 IT Department' }
+  }
+];
+
+function getKatTag(m) {
+  const uM = (m || '').toUpperCase();
+  if (uM.includes('AB3') || uM.includes('BB3') || uM.includes('CB3') || uM.includes('-3') || uM.includes('SPOR SALON')) {
+    return (lang === 'ar') ? 'طابق البدروم 3-' : (lang === 'en' ? 'Basement -3' : 'Bodrum -3');
+  } else if (uM.includes('AB2') || uM.includes('BB2') || uM.includes('CB2') || uM.includes('-2')) {
+    return (lang === 'ar') ? 'طابق البدروم 2-' : (lang === 'en' ? 'Basement -2' : 'Bodrum -2');
+  } else if (uM.includes('AZ') || uM.includes('ZEMIN') || uM.includes('START') || uM.includes('GİRİŞ')) {
+    return (lang === 'ar') ? 'الطابق الأرضي' : (lang === 'en' ? 'Ground Floor' : 'Zemin Kat');
+  } else if (uM.match(/\d/)) {
+    const num = uM.match(/\d/)[0];
+    return (lang === 'ar') ? `الطابق ${num}` : (lang === 'en' ? `Floor ${num}` : `${num}. Kat`);
+  }
+  return (lang === 'ar') ? 'مكان' : (lang === 'en' ? 'Location' : 'Mekan');
+}
+
 function quickDest(kw) {
   let target = kw;
   if (MEKANLAR && MEKANLAR.length > 0) {
-    const match = MEKANLAR.find(m => m.name.toUpperCase().includes(kw.toUpperCase()));
+    const sa = SEARCH_ALIASES.find(s => s.target.toUpperCase().includes(kw.toUpperCase()) || s.aliases.some(a => normStr(a) === normStr(kw)));
+    const searchKey = sa ? sa.target : kw;
+    const match = MEKANLAR.find(m => normStr(m).includes(normStr(searchKey)));
     if (match) {
-      target = match.name;
+      target = match;
     }
   }
   document.getElementById('inp-dest').value = target;
@@ -1396,32 +1566,76 @@ function setupSug(inputId, sugId) {
   }
 
   function show(q) {
-    q = (q || '').trim().toUpperCase().replace(/[-\s]/g, '');
+    const normQ = normStr(q);
     sel = -1;
-    let list = MEKANLAR;
-    if (q) list = MEKANLAR.filter(m => m.toUpperCase().replace(/[-\s]/g, '').includes(q));
-    list = list.slice(0, 30);
-    currentList = list;
+    let results = [];
+    const addedTargets = new Set();
 
-    if (!list.length) { box.classList.remove('open'); return; }
+    if (!normQ) {
+      // Top 8 popular destinations when focused with empty query
+      SEARCH_ALIASES.slice(0, 8).forEach(sa => {
+        const matchInMekan = MEKANLAR.find(m => normStr(m).includes(normStr(sa.target)));
+        const roomCode = matchInMekan || sa.target;
+        if (!addedTargets.has(roomCode)) {
+          addedTargets.add(roomCode);
+          results.push({
+            target: roomCode,
+            title: sa.label[lang] || sa.label.ar,
+            katTag: getKatTag(roomCode)
+          });
+        }
+      });
+    } else {
+      // 1. Alias keyword search (matches Arabic, Turkish, English terms)
+      SEARCH_ALIASES.forEach(sa => {
+        const aliasMatch = sa.aliases.some(a => normStr(a).includes(normQ));
+        if (aliasMatch) {
+          const matchInMekan = MEKANLAR.find(m => normStr(m).includes(normStr(sa.target)));
+          const roomCode = matchInMekan || sa.target;
+          if (!addedTargets.has(roomCode)) {
+            addedTargets.add(roomCode);
+            results.push({
+              target: roomCode,
+              title: `${sa.label[lang] || sa.label.ar} (${roomCode})`,
+              katTag: getKatTag(roomCode)
+            });
+          }
+        }
+      });
 
-    box.innerHTML = list.map(m => {
-      let katTag = 'Mekan';
-      const uM = m.toUpperCase();
-      if (uM.includes('AB3') || uM.includes('BB3') || uM.includes('CB3') || uM.includes('-3') || uM.includes('KÜTÜPHANE -3') || uM.includes('SPOR SALON')) {
-        katTag = (lang === 'ar') ? 'طابق البدروم 3-' : 'Bodrum -3';
-      } else if (uM.includes('AB2') || uM.includes('BB2') || uM.includes('CB2') || uM.includes('-2')) {
-        katTag = (lang === 'ar') ? 'طابق البدروم 2-' : 'Bodrum -2';
-      } else if (uM.includes('AZ') || uM.includes('ZEMIN') || uM.includes('START') || uM.includes('GİRİŞ')) {
-        katTag = (lang === 'ar') ? 'الطابق الأرضي' : 'Zemin Kat';
-      } else if (uM.match(/\d/)) {
-        katTag = (lang === 'ar') ? `الطابق ${uM.match(/\d/)[0]}` : `${uM.match(/\d/)[0]}. Kat`;
-      }
-      return `<div><span>${m}</span><span class="room-tag">${katTag}</span></div>`;
-    }).join('');
+      // 2. Direct MEKANLAR room code search (e.g. A120, B205, AZ05)
+      MEKANLAR.forEach(m => {
+        if (normStr(m).includes(normQ) && !addedTargets.has(m)) {
+          addedTargets.add(m);
+          results.push({
+            target: m,
+            title: m,
+            katTag: getKatTag(m)
+          });
+        }
+      });
+    }
+
+    results = results.slice(0, 30);
+    currentList = results.map(r => r.target);
+
+    if (!results.length) {
+      box.classList.remove('open');
+      return;
+    }
+
+    box.innerHTML = results.map(r => `
+      <div>
+        <span>${r.title}</span>
+        <span class="room-tag">${r.katTag}</span>
+      </div>
+    `).join('');
 
     box.querySelectorAll('div').forEach((d, i) => {
-      d.addEventListener('mousedown', e => { e.preventDefault(); pick(i); });
+      d.addEventListener('mousedown', e => {
+        e.preventDefault();
+        pick(i);
+      });
     });
     box.classList.add('open');
   }
