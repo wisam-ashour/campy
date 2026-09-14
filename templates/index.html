@@ -1270,6 +1270,29 @@ function pickLang(l) {
   goScreen('s-lang', 's-dest');
 }
 
+function getFloorLabel(kat) {
+  const t = T[lang] || T.ar;
+  if (!kat) return t.floor0;
+  const k = kat.toString().toLowerCase().trim();
+  if (k === 'zemin' || k === '0') return t.floor0;
+  if (k === 'kat1' || k === '1') return t.floor1;
+  if (k === 'kat2' || k === '2') return t.floor2;
+  if (k === 'kat3' || k === '3') return t.floor3;
+  if (k === 'kat-1' || k === '-1') return t.floorNeg1;
+  if (k === 'kat-2' || k === '-2') return t.floorNeg2;
+  if (k === 'kat-3' || k === '-3') return t.floorNeg3;
+  
+  if (k.startsWith('kat-')) {
+    const num = k.replace('kat-', '');
+    return (lang === 'ar') ? `طابق البدروم ${num}-` : (lang === 'tr') ? `Bodrum -${num}` : `Basement -${num}`;
+  }
+  if (k.startsWith('kat')) {
+    const num = k.replace('kat', '');
+    return (lang === 'ar') ? `الطابق ${num}` : (lang === 'tr') ? `${num}. Kat` : `Floor ${num}`;
+  }
+  return k;
+}
+
 function applyLangToUI() {
   const t = T[lang];
   document.querySelectorAll('.union-badge-txt').forEach(el => el.textContent = t.unionBadge);
@@ -1322,6 +1345,17 @@ function applyLangToUI() {
   if (editDest) editDest.placeholder = t.placeholderEditDest;
   const editOrigin = document.getElementById('edit-origin');
   if (editOrigin) editOrigin.placeholder = t.placeholderEditOrigin;
+
+  // Update Floor Pills in Map if active
+  if (routeData && routeData.asamalar && routeData.asamalar.length > 0) {
+    const badgeContainer = document.getElementById('floor-badge');
+    if (badgeContainer && routeData.asamalar.length > 1) {
+      badgeContainer.innerHTML = routeData.asamalar.map((s, i) => {
+        const lbl = getFloorLabel(s.kat);
+        return `<div class="floor-pill ${(i === currentFloorIdx) ? 'active' : ''}" onclick="showFloorMap(${i})">${lbl}</div>`;
+      }).join('');
+    }
+  }
 
   // Destination Quick Cards
   const destChips = document.getElementById('dest-chips');
@@ -1903,7 +1937,7 @@ function showFloorMap(idx) {
   // Floor Pill Badges
   const badgeContainer = document.getElementById('floor-badge');
   const currentStageKat = stage ? stage.kat : 'zemin';
-  const currentFloorLabel = (currentStageKat === 'zemin') ? T[lang].floor0 : currentStageKat.replace('kat', '') + '. Kat';
+  const currentFloorLabel = getFloorLabel(currentStageKat);
   
   const floorTxtEl = document.getElementById('building-floor-txt');
   if (floorTxtEl) floorTxtEl.textContent = currentFloorLabel;
@@ -1911,7 +1945,7 @@ function showFloorMap(idx) {
   if (routeData.asamalar.length > 1) {
     badgeContainer.style.display = 'flex';
     badgeContainer.innerHTML = routeData.asamalar.map((s, i) => {
-      const lbl = (s.kat === 'zemin') ? T[lang].floor0 : s.kat.replace('kat', '') + '. Kat';
+      const lbl = getFloorLabel(s.kat);
       return `<div class="floor-pill ${(i === idx) ? 'active' : ''}" onclick="showFloorMap(${i})">${lbl}</div>`;
     }).join('');
   } else {
@@ -2196,10 +2230,7 @@ function startMover(svg) {
             const isEscalator = targetUpper.includes('YÜRÜYEN') || targetUpper.includes('YURUYEN') || targetUpper.includes('ESCALATOR');
             const viaText = isElevator ? t.viaElevator : (isEscalator ? t.viaEscalator : t.viaStairs);
             
-            let targetFloorText = nextStage.kat === 'zemin' ? t.floor0 : `${nextStage.kat.replace('kat', '')}. Kat`;
-            if (nextStage.kat.startsWith('kat-')) {
-              targetFloorText = (lang === 'ar') ? `طابق البدروم ${nextStage.kat.replace('kat-', '')}-` : `Bodrum ${nextStage.kat.replace('kat', '')}`;
-            }
+            const targetFloorText = getFloorLabel(nextStage.kat);
             showDynamicCampyBubble(bubble, bubbleTxt, `👇 ${t.goToFloor} ${targetFloorText} (${viaText}) ➔`);
           }
           const targetUpper = (currentStage.hedef || '').toUpperCase();
