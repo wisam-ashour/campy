@@ -1090,7 +1090,6 @@ html, body {
     <button class="back-btn" onclick="resetToHome()" style="pointer-events:auto; font-size:13px; padding: 7px 14px;">
       <span id="map-back-dest-btn">← اختيار وجهة جديدة</span>
     </button>
-    <div class="dest-tag-badge" id="map-dest-badge" style="display:none; pointer-events:auto;"></div>
     <!-- Floor Selector Pills -->
     <div class="floor-badge" id="floor-badge"></div>
   </div>
@@ -1827,13 +1826,6 @@ async function startRoute() {
   const mapScreen = document.getElementById('s-map');
   mapScreen.classList.add('active');
 
-  // Set top bar target badge
-  const mapDestBadge = document.getElementById('map-dest-badge');
-  if (mapDestBadge) {
-    mapDestBadge.style.display = 'inline-flex';
-    mapDestBadge.textContent = `🎯 ${dest}`;
-  }
-
   let apiTercih = (currentRouteMode === 'MERDIVEN') ? 'MERDIVEN' : 'ASANSOR';
   let targetDest = dest;
   if (currentRouteMode === 'ENGELSİZ') {
@@ -1859,10 +1851,6 @@ async function startRoute() {
     routeData = d;
     currentFloorIdx = 0;
 
-    if (mapDestBadge) {
-      mapDestBadge.textContent = `🎯 ${dest} • ${d.mesafe}m (~${d.dakika}m)`;
-    }
-
     showFloorMap(0);
 
   } catch (e) {
@@ -1871,13 +1859,6 @@ async function startRoute() {
 }
 
 async function reRoute() {
-  const dest = document.getElementById('edit-dest').value.trim();
-  let origin = document.getElementById('edit-origin').value.trim();
-  if (!origin) origin = 'START_POINT';
-  if (!dest) return;
-
-  document.getElementById('inp-dest').value = dest;
-  document.getElementById('inp-origin').value = origin;
   startRoute();
 }
 
@@ -1993,10 +1974,9 @@ function showFloorMap(idx) {
 
   container.insertBefore(svg, container.firstChild);
   setupNativeTouchGestures(svg);
-  startMover(svg);
 
-  // Pan Zoom Init
-  setTimeout(() => {
+  // Pan Zoom Init immediately before startMover
+  try {
     pzInstance = svgPanZoom('#route-svg', {
       zoomEnabled: true,
       controlIconsEnabled: false,
@@ -2005,11 +1985,12 @@ function showFloorMap(idx) {
       minZoom: 0.4,
       maxZoom: 8
     });
-    // Default: Zoom in close to Campy and path for immersive camera follow
     if (!isFullMapView) {
-      pzInstance.zoomAtPoint(2.5, { x: container.clientWidth / 2, y: container.clientHeight / 2 });
+      pzInstance.zoomAtPoint(2.2, { x: container.clientWidth / 2, y: container.clientHeight / 2 });
     }
-  }, 150);
+  } catch (e) {}
+
+  startMover(svg);
 
   // Floor Pill Badges
   const badgeContainer = document.getElementById('floor-badge');
