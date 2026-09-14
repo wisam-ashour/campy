@@ -576,33 +576,50 @@ html, body {
   box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
 }
 
-/* Route Movement Mode Switcher inside Drawer */
-.route-mode-switcher {
-  display: flex;
-  background: rgba(14, 22, 38, 0.7);
+/* Floating Movement Mode Menu Popup */
+.float-mode-menu {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 0;
+  background: rgba(14, 22, 38, 0.95);
+  backdrop-filter: blur(16px);
   border: 1.5px solid var(--card-border);
-  border-radius: 14px;
-  padding: 4px;
+  border-radius: 16px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
   gap: 4px;
-  margin-bottom: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  min-width: 155px;
+  animation: popIn 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
-.mode-btn {
-  flex: 1;
+
+@keyframes popIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.92); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.float-mode-item {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 5px;
-  background: transparent;
-  border: none;
-  color: var(--text-sub);
-  padding: 8px 6px;
+  gap: 8px;
+  padding: 9px 12px;
   font-size: 13px;
   font-weight: 700;
+  color: var(--text-sub);
   border-radius: 10px;
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: all 0.2s ease;
+  white-space: nowrap;
 }
-.mode-btn.active {
+
+.float-mode-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.float-mode-item.active {
   background: var(--accent-cyan);
   color: #0f172a;
   box-shadow: 0 4px 12px rgba(6, 182, 212, 0.35);
@@ -1085,12 +1102,28 @@ html, body {
   <!-- Transition Overlay (Stairs / Elevator for Multi-floor) -->
   <div class="transition-overlay" id="transition-overlay" style="display:none"></div>
 
-  <!-- Floating Controls (Camera Tracking / Restart Path / Full Map Toggle / Recenter) -->
-  <div class="map-controls">
+  <!-- Floating Controls (Camera Tracking / Movement Mode / Restart Path / Full Map Toggle / Recenter) -->
+  <div class="map-controls" style="position: relative;">
     <button class="map-ctrl-btn active" id="btn-cam-track" onclick="toggleCamTrack()" aria-label="Camera Tracking" title="تعقب الكاميرا لكامبي">🎥</button>
+    <button class="map-ctrl-btn" id="btn-mode-float" onclick="toggleModeFloatMenu(event)" aria-label="Movement Mode" title="وسيلة التنقل">
+      <span id="float-mode-icon">🪜</span>
+    </button>
     <button class="map-ctrl-btn" onclick="restartRouteAnimation()" aria-label="Restart Path" title="إعادة تشغيل المسار">🔄</button>
     <button class="map-ctrl-btn" id="btn-full-map" onclick="toggleFullMapView()" aria-label="Toggle Full Map" title="إظهار الخريطة كاملة / التكبير على المسار">🗺️</button>
     <button class="map-ctrl-btn" onclick="recenterOnCampy()" aria-label="Recenter" title="إعادة التمركز على كامبي">🎯</button>
+
+    <!-- Floating Mode Selection Menu Popup -->
+    <div class="float-mode-menu" id="float-mode-menu" style="display: none;">
+      <div class="float-mode-item active" id="mode-stairs" onclick="setRouteMode('MERDIVEN')">
+        <span>🪜</span> <span id="lbl-mode-stairs">سلالم</span>
+      </div>
+      <div class="float-mode-item" id="mode-elevator" onclick="setRouteMode('ASANSOR')">
+        <span>🛗</span> <span id="lbl-mode-elevator">مصعد</span>
+      </div>
+      <div class="float-mode-item" id="mode-accessible" onclick="setRouteMode('ENGELSİZ')">
+        <span>♿</span> <span id="lbl-mode-accessible">ذوي الاحتياجات</span>
+      </div>
+    </div>
   </div>
 
   <!-- Bottom Navigation Drawer -->
@@ -1106,18 +1139,6 @@ html, body {
     <div id="drawer-body">
       <!-- Edit controls inside drawer -->
       <div class="drawer-edit" id="drawer-edit">
-        <!-- Movement Mode Switcher inside Drawer -->
-        <div class="route-mode-switcher">
-          <button class="mode-btn active" id="mode-stairs" onclick="setRouteMode('MERDIVEN')">
-            <span>🪜</span> <span id="lbl-mode-stairs">سلالم</span>
-          </button>
-          <button class="mode-btn" id="mode-elevator" onclick="setRouteMode('ASANSOR')">
-            <span>🛗</span> <span id="lbl-mode-elevator">مصعد</span>
-          </button>
-          <button class="mode-btn" id="mode-accessible" onclick="setRouteMode('ENGELSİZ')">
-            <span>♿</span> <span id="lbl-mode-accessible">ذوي الاحتياجات</span>
-          </button>
-        </div>
         <div class="wizard-input-wrap">
           <input class="wizard-input" id="edit-dest" autocomplete="off" placeholder="تغيير الوجهة (مثال: A120، B205...)">
           <div class="sug" id="sug-edit-dest"></div>
@@ -1644,6 +1665,22 @@ function getKatTag(m) {
 // ════════════════ ROUTE MODE PREFERENCE ════════════════
 let currentRouteMode = 'MERDIVEN'; // 'MERDIVEN', 'ASANSOR', 'ENGELSİZ'
 
+function toggleModeFloatMenu(e) {
+  if (e) e.stopPropagation();
+  const menu = document.getElementById('float-mode-menu');
+  if (!menu) return;
+  const isShown = menu.style.display === 'flex';
+  menu.style.display = isShown ? 'none' : 'flex';
+}
+
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('float-mode-menu');
+  const btn = document.getElementById('btn-mode-float');
+  if (menu && menu.style.display === 'flex' && !menu.contains(e.target) && (!btn || !btn.contains(e.target))) {
+    menu.style.display = 'none';
+  }
+});
+
 function setRouteMode(mode) {
   currentRouteMode = mode;
   const btnStairs = document.getElementById('mode-stairs');
@@ -1652,6 +1689,14 @@ function setRouteMode(mode) {
   if (btnStairs) btnStairs.classList.toggle('active', mode === 'MERDIVEN');
   if (btnElevator) btnElevator.classList.toggle('active', mode === 'ASANSOR');
   if (btnAccessible) btnAccessible.classList.toggle('active', mode === 'ENGELSİZ');
+
+  const floatIcon = document.getElementById('float-mode-icon');
+  if (floatIcon) {
+    floatIcon.textContent = (mode === 'MERDIVEN') ? '🪜' : (mode === 'ASANSOR' ? '🛗' : '♿');
+  }
+
+  const menu = document.getElementById('float-mode-menu');
+  if (menu) menu.style.display = 'none';
 
   const destVal = document.getElementById('inp-dest').value.trim();
   if (destVal) {
