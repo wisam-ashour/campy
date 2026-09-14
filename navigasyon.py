@@ -174,13 +174,44 @@ def tum_mekanlar():
     return sorted(hepsi)
 
 
-def mekan_kati(ad):
-    """Bir mekânın hangi katta olduğunu bulur (önce koda bakar, sonra dosyalara)."""
-    kod_kat = kat_bul(ad)
-    if kod_kat and kod_kat in _KATLAR and ad in _KATLAR[kod_kat]["rooms"]:
-        return kod_kat
+def _norm_mekan_ad(s):
+    if not s:
+        return ""
+    s = str(s).strip().upper()
+    s = s.replace("İ", "I").replace("I", "I").replace("İ", "I")
+    s = s.replace("Ş", "S").replace("Ğ", "G").replace("Ü", "U").replace("Ö", "O").replace("Ç", "C")
+    s = re.sub(r"[-\s_]", "", s)
+    return s
+
+
+def _gercek_mekan_ad(ad):
+    """Mekân adını katlardaki tam DWG ismiyle eşleştirir (esnek Türkçe/İngilizce harف duyarlılığı)."""
+    if not ad:
+        return ad
     for kat, veri in _KATLAR.items():
         if ad in veri["rooms"]:
+            return ad
+    norm_t = _norm_mekan_ad(ad)
+    for kat, veri in _KATLAR.items():
+        for rm in veri["rooms"]:
+            if _norm_mekan_ad(rm) == norm_t:
+                return rm
+    for kat, veri in _KATLAR.items():
+        for rm in veri["rooms"]:
+            n_rm = _norm_mekan_ad(rm)
+            if norm_t in n_rm or n_rm in norm_t:
+                return rm
+    return ad
+
+
+def mekan_kati(ad):
+    """Bir mekânın hangi katta olduğunu bulur (önce koda bakar, sonra esnek isim arar)."""
+    ad_gercek = _gercek_mekan_ad(ad)
+    kod_kat = kat_bul(ad_gercek)
+    if kod_kat and kod_kat in _KATLAR and ad_gercek in _KATLAR[kod_kat]["rooms"]:
+        return kod_kat
+    for kat, veri in _KATLAR.items():
+        if ad_gercek in veri["rooms"]:
             return kat
     return None
 
@@ -391,6 +422,8 @@ def _svg_ciz(kat, dugumler, bas_ad, hedef_ad, baslik, genislik=740):
 def rota(hedef_ad, baslangic_ad="START_POINT", tercih="MERDIVEN"):
     """Herhangi bir mekândan herhangi bir mekâna rota.
     Aynı kattaysa tek harita, farklı kattaysa merdiven/asansör üzerinden iki aşama."""
+    hedef_ad = _gercek_mekan_ad(hedef_ad)
+    baslangic_ad = _gercek_mekan_ad(baslangic_ad)
     hedef_kat = mekan_kati(hedef_ad)
     bas_kat = mekan_kati(baslangic_ad)
     if hedef_kat is None or bas_kat is None:
