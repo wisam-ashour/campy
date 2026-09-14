@@ -2081,6 +2081,7 @@ function startMover(svg) {
     }
   }
 
+  const len = path.getTotalLength();
   const dist = (oldMover && parseFloat(oldMover.dataset.mesafe)) || 10;
   const vSpeedMetersPerSec = 2.4; // Constant uniform walking speed across all floor maps
   const walkDuration = Math.max(2400, (dist / vSpeedMetersPerSec) * 1000);
