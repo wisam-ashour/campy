@@ -576,6 +576,38 @@ html, body {
   box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
 }
 
+/* Route Movement Mode Switcher inside Drawer */
+.route-mode-switcher {
+  display: flex;
+  background: rgba(14, 22, 38, 0.7);
+  border: 1.5px solid var(--card-border);
+  border-radius: 14px;
+  padding: 4px;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+.mode-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background: transparent;
+  border: none;
+  color: var(--text-sub);
+  padding: 8px 6px;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.mode-btn.active {
+  background: var(--accent-cyan);
+  color: #0f172a;
+  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.35);
+}
+
 /* Map Canvas Container */
 #map-container {
   flex: 1;
@@ -1074,6 +1106,18 @@ html, body {
     <div id="drawer-body">
       <!-- Edit controls inside drawer -->
       <div class="drawer-edit" id="drawer-edit">
+        <!-- Movement Mode Switcher inside Drawer -->
+        <div class="route-mode-switcher">
+          <button class="mode-btn active" id="mode-stairs" onclick="setRouteMode('MERDIVEN')">
+            <span>🪜</span> <span id="lbl-mode-stairs">سلالم</span>
+          </button>
+          <button class="mode-btn" id="mode-elevator" onclick="setRouteMode('ASANSOR')">
+            <span>🛗</span> <span id="lbl-mode-elevator">مصعد</span>
+          </button>
+          <button class="mode-btn" id="mode-accessible" onclick="setRouteMode('ENGELSİZ')">
+            <span>♿</span> <span id="lbl-mode-accessible">ذوي الاحتياجات</span>
+          </button>
+        </div>
         <div class="wizard-input-wrap">
           <input class="wizard-input" id="edit-dest" autocomplete="off" placeholder="تغيير الوجهة (مثال: A120، B205...)">
           <div class="sug" id="sug-edit-dest"></div>
@@ -1150,7 +1194,10 @@ const T = {
     arrived: "لقد وصلت إلى وجهتك! 🎉",
     placeholderEditDest: "تغيير الوجهة (مثال: A120، B205...)",
     placeholderEditOrigin: "تغيير الموقع (مثال: المدخل الرئيسي...)",
-    btnBackDestPage: "← اختيار وجهة جديدة"
+    btnBackDestPage: "← اختيار وجهة جديدة",
+    modeStairs: "سلالم",
+    modeElevator: "مصعد",
+    modeAccessible: "ذوي الاحتياجات"
   },
   tr: {
     unionBadge: "Biruni Üniversitesi Arap Öğrenciler Birliği",
@@ -1198,7 +1245,10 @@ const T = {
     arrived: "Hedefe ulaştınız! 🎉",
     placeholderEditDest: "Hedef Değiştir (Örn: A120, B205...)",
     placeholderEditOrigin: "Konum Değiştir (Örn: Ana Giriş...)",
-    btnBackDestPage: "← Yeni Hedef Seç"
+    btnBackDestPage: "← Yeni Hedef Seç",
+    modeStairs: "Merdiven",
+    modeElevator: "Asansör",
+    modeAccessible: "Engelsiz"
   },
   en: {
     unionBadge: "Biruni University Arab Students Association",
@@ -1246,7 +1296,10 @@ const T = {
     arrived: "You have arrived! 🎉",
     placeholderEditDest: "Change Destination (e.g. A120, B205...)",
     placeholderEditOrigin: "Change Location (e.g. Main Entrance...)",
-    btnBackDestPage: "← Choose New Destination"
+    btnBackDestPage: "← Choose New Destination",
+    modeStairs: "Stairs",
+    modeElevator: "Elevator",
+    modeAccessible: "Accessible"
   }
 };
 
@@ -1588,6 +1641,24 @@ function getKatTag(m) {
   return (lang === 'ar') ? 'مكان' : (lang === 'en' ? 'Location' : 'Mekan');
 }
 
+// ════════════════ ROUTE MODE PREFERENCE ════════════════
+let currentRouteMode = 'MERDIVEN'; // 'MERDIVEN', 'ASANSOR', 'ENGELSİZ'
+
+function setRouteMode(mode) {
+  currentRouteMode = mode;
+  const btnStairs = document.getElementById('mode-stairs');
+  const btnElevator = document.getElementById('mode-elevator');
+  const btnAccessible = document.getElementById('mode-accessible');
+  if (btnStairs) btnStairs.classList.toggle('active', mode === 'MERDIVEN');
+  if (btnElevator) btnElevator.classList.toggle('active', mode === 'ASANSOR');
+  if (btnAccessible) btnAccessible.classList.toggle('active', mode === 'ENGELSİZ');
+
+  const destVal = document.getElementById('inp-dest').value.trim();
+  if (destVal) {
+    startRoute();
+  }
+}
+
 function quickDest(kw) {
   let target = kw;
   if (MEKANLAR && MEKANLAR.length > 0) {
@@ -1752,11 +1823,20 @@ async function startRoute() {
   document.getElementById('edit-dest').value = '';
   document.getElementById('edit-origin').value = '';
 
+  let apiTercih = (currentRouteMode === 'MERDIVEN') ? 'MERDIVEN' : 'ASANSOR';
+  let targetDest = dest;
+  if (currentRouteMode === 'ENGELSİZ') {
+    const uDest = dest.toUpperCase();
+    if (uDest.includes('WC') || uDest.includes('حمام') || uDest.includes('RESTROOM') || uDest.includes('TOALET') || uDest.includes('BATHROOM')) {
+      targetDest = 'ENGELLİ WC';
+    }
+  }
+
   try {
     const res = await fetch('/api/rota', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ baslangic: origin, hedef: dest, tercih: 'MERDIVEN' })
+      body: JSON.stringify({ baslangic: origin, hedef: targetDest, tercih: apiTercih })
     });
     const d = await res.json();
 
