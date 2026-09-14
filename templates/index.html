@@ -642,7 +642,7 @@ html, body {
 /* Transition Overlay for Multi-floor (Stairs/Elevator) */
 .transition-overlay {
   position: absolute;
-  bottom: 80px;
+  bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 25;
@@ -684,7 +684,7 @@ html, body {
 .map-controls {
   position: absolute;
   right: 14px;
-  bottom: 80px;
+  bottom: 24px;
   z-index: 25;
   display: flex;
   flex-direction: column;
@@ -1090,6 +1090,7 @@ html, body {
     <button class="back-btn" onclick="resetToHome()" style="pointer-events:auto; font-size:13px; padding: 7px 14px;">
       <span id="map-back-dest-btn">← اختيار وجهة جديدة</span>
     </button>
+    <div class="dest-tag-badge" id="map-dest-badge" style="display:none; pointer-events:auto;"></div>
     <!-- Floor Selector Pills -->
     <div class="floor-badge" id="floor-badge"></div>
   </div>
@@ -1132,38 +1133,6 @@ html, body {
     <button class="map-ctrl-btn" id="btn-full-map" onclick="toggleFullMapView()" aria-label="Toggle Full Map" title="إظهار الخريطة كاملة / التكبير على المسار">🗺️</button>
     <!-- Fifth button: Recenter -->
     <button class="map-ctrl-btn" onclick="recenterOnCampy()" aria-label="Recenter" title="إعادة التمركز على كامبي">🎯</button>
-  </div>
-
-  <!-- Bottom Navigation Drawer -->
-  <div id="drawer" class="collapsed">
-    <div class="drawer-handle-bar" onclick="toggleDrawer()">
-      <div class="drawer-handle-line"></div>
-      <div class="drawer-summary-strip">
-        <span id="drawer-quick-text">⚙️ خيارات وتعديل المسار</span>
-        <span id="drawer-toggle-icon">▲</span>
-      </div>
-    </div>
-
-    <div id="drawer-body">
-      <!-- Edit controls inside drawer -->
-      <div class="drawer-edit" id="drawer-edit">
-        <div class="wizard-input-wrap">
-          <input class="wizard-input" id="edit-dest" autocomplete="off" placeholder="تغيير الوجهة (مثال: A120، B205...)">
-          <div class="sug" id="sug-edit-dest"></div>
-        </div>
-        <div class="wizard-input-wrap">
-          <input class="wizard-input" id="edit-origin" autocomplete="off" placeholder="تغيير الموقع (مثال: المدخل الرئيسي...)">
-          <div class="sug" id="sug-edit-origin"></div>
-        </div>
-        <div style="display: flex; gap: 10px;">
-          <button class="wizard-btn" style="height: 46px; font-size: 15px;" id="btn-edit" onclick="reRoute()">تحديث المسار</button>
-          <button class="wizard-btn" style="height: 46px; font-size: 15px; background: rgba(255,255,255,0.1); box-shadow: none;" id="btn-back-dest-page" onclick="resetToHome()">← اختيار وجهة جديدة</button>
-        </div>
-      </div>
-
-      <!-- Turn-by-Turn Directions Container -->
-      <div id="drawer-directions"></div>
-    </div>
   </div>
 
 </div>
@@ -1858,23 +1827,12 @@ async function startRoute() {
   const mapScreen = document.getElementById('s-map');
   mapScreen.classList.add('active');
 
-  // Set top bar target badge (if element exists)
+  // Set top bar target badge
   const mapDestBadge = document.getElementById('map-dest-badge');
-  if (mapDestBadge) mapDestBadge.textContent = `🎯 ${dest}`;
-
-  // Show loader in drawer
-  const drawer = document.getElementById('drawer');
-  drawer.classList.remove('collapsed');
-  document.getElementById('drawer-directions').innerHTML = `
-    <div style="text-align:center; padding: 30px; color: var(--accent-cyan); font-weight: 700;">
-      <p style="margin-bottom:8px; font-size:16px;">${T[lang].calculating}</p>
-      <div style="display:inline-block; width:24px; height:24px; border:3px solid var(--accent-cyan); border-top-color:transparent; border-radius:50%; animation:spin 0.8s linear infinite;"></div>
-    </div>
-  `;
-
-  // Leave edit fields inside drawer empty so user starts blank with placeholder
-  document.getElementById('edit-dest').value = '';
-  document.getElementById('edit-origin').value = '';
+  if (mapDestBadge) {
+    mapDestBadge.style.display = 'inline-flex';
+    mapDestBadge.textContent = `🎯 ${dest}`;
+  }
 
   let apiTercih = (currentRouteMode === 'MERDIVEN') ? 'MERDIVEN' : 'ASANSOR';
   let targetDest = dest;
@@ -1894,35 +1852,21 @@ async function startRoute() {
     const d = await res.json();
 
     if (d.durum !== 'ok') {
-      document.getElementById('drawer-directions').innerHTML = `
-        <div style="text-align:center; padding: 30px; color: var(--danger);">
-          <p style="font-weight:700; font-size:16px;">${T[lang].errorNoRoute}</p>
-        </div>
-      `;
+      showToast(T[lang].errorNoRoute);
       return;
     }
 
     routeData = d;
     currentFloorIdx = 0;
 
-    // Update stats header (if elements exist)
-    const distVal = document.getElementById('map-dist-val');
-    if (distVal) distVal.textContent = `${d.mesafe} m`;
-    const timeVal = document.getElementById('map-time-val');
-    if (timeVal) timeVal.textContent = `~${d.dakika} dk`;
+    if (mapDestBadge) {
+      mapDestBadge.textContent = `🎯 ${dest} • ${d.mesafe}m (~${d.dakika}m)`;
+    }
 
-    renderDrawerContent(d);
     showFloorMap(0);
 
-    // Auto Collapse Drawer after short preview
-    setTimeout(() => {
-      drawer.classList.add('collapsed');
-    }, 1200);
-
   } catch (e) {
-    document.getElementById('drawer-directions').innerHTML = `
-      <p style="text-align:center; color:var(--danger); padding:20px;">Bağlantı hatası oluştu.</p>
-    `;
+    showToast(T[lang].errorNoRoute);
   }
 }
 
@@ -2406,30 +2350,8 @@ function showDynamicCampyBubble(bubble, bubbleTxt, str) {
   bubble.style.display = 'block';
 }
 
-// ════════════════ DRAWER & ROUTE EDIT ════════════════
-function toggleDrawer() {
-  const d = document.getElementById('drawer');
-  const edit = document.getElementById('drawer-edit');
-  const icon = document.getElementById('drawer-toggle-icon');
-  if (d.classList.contains('collapsed')) {
-    d.classList.remove('collapsed');
-    edit.classList.add('show');
-    icon.textContent = '▼';
-  } else {
-    d.classList.add('collapsed');
-    edit.classList.remove('show');
-    icon.textContent = '▲';
-  }
-}
-
-function renderDrawerContent(d) {
-  // Written text directions removed per user request.
-  // The map view provides 100% visual navigation via animated path and walking dot.
-  const container = document.getElementById('drawer-directions');
-  if (container) {
-    container.innerHTML = '';
-  }
-}
+function toggleDrawer() {}
+function renderDrawerContent(d) {}
 
 
 // ════════════════ MASCOT SPEECH & TOAST ════════════════
