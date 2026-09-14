@@ -45,11 +45,27 @@ def kat_bul(oda_adi):
     return None
 
 
+POI_BLOCK_MAP = {
+    "BAY MESCIT": "C",
+    "BAYAN MESCIT": "C",
+    "MESCIT": "C",
+    "MOSQUE": "C",
+    "KÜTÜPHANE": "A",
+    "REVIR": "A",
+    "KIRTASIYE": "B",
+}
+
 def blok_bul(oda_adi):
-    """Oda veya geçiş adından blok harfini çıkarır (Örn: A120 -> 'A', AB201 -> 'A', MERDİVEN A -> 'A')."""
+    """Oda veya geçiş adından blok harfini çıkarır (Örn: A120 -> 'A', CB201 -> 'C', MERDİVEN C -> 'C')."""
     if not oda_adi:
         return None
     ad = oda_adi.strip().upper()
+
+    # Explicit POI block overrides
+    for key, blk in POI_BLOCK_MAP.items():
+        if key in ad:
+            return blk
+
     if ad.startswith("AB") or ad.startswith("AZ"):
         return "A"
     if ad.startswith("BB") or ad.startswith("BZ"):
@@ -58,12 +74,19 @@ def blok_bul(oda_adi):
         return "C"
     if ad.startswith("DB") or ad.startswith("DZ"):
         return "D"
+    if ad.startswith("JB") or ad.startswith("JZ"):
+        return "C"
+
     if "MERDİVEN" in ad or "MERDIVEN" in ad or "ASANSÖR" in ad or "ASANSOR" in ad:
         for char in reversed(ad):
             if char.isalpha() and char.isupper():
                 return char
-    if ad[0].isalpha():
-        return ad[0]
+
+    # Match standard room codes like A120, B205, C101, J105
+    if len(ad) >= 2 and ad[0] in ["A", "B", "C", "D", "J"]:
+        if ad[1].isdigit() or ad[1] in ["B", "Z"]:
+            return "C" if ad[0] == "J" else ad[0]
+
     return None
 
 
