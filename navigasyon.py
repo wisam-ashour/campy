@@ -46,9 +46,25 @@ def kat_bul(oda_adi):
 
 
 def blok_bul(oda_adi):
-    """Oda kodundan bloku çıkarır: A120 -> 'A'."""
+    """Oda veya geçiş adından blok harfini çıkarır (Örn: A120 -> 'A', AB201 -> 'A', MERDİVEN A -> 'A')."""
+    if not oda_adi:
+        return None
     ad = oda_adi.strip().upper()
-    return ad[0] if ad and ad[0].isalpha() else None
+    if ad.startswith("AB") or ad.startswith("AZ"):
+        return "A"
+    if ad.startswith("BB") or ad.startswith("BZ"):
+        return "B"
+    if ad.startswith("CB") or ad.startswith("CZ"):
+        return "C"
+    if ad.startswith("DB") or ad.startswith("DZ"):
+        return "D"
+    if "MERDİVEN" in ad or "MERDIVEN" in ad or "ASANSÖR" in ad or "ASANSOR" in ad:
+        for char in reversed(ad):
+            if char.isalpha() and char.isupper():
+                return char
+    if ad[0].isalpha():
+        return ad[0]
+    return None
 
 
 def kat_yukle(kat_adi, dxf_yolu):
@@ -267,9 +283,15 @@ def _svg_ciz(kat, dugumler, bas_ad, hedef_ad, baslik, genislik=740):
 
     bp = veri["rooms"][bas_ad]
     hp = veri["rooms"][hedef_ad]
-    nokta = [(sx(bp[0]), sy(bp[1]))]
-    nokta += [(sx(p[0]), sy(p[1])) for p in (dugumler or [])]
-    nokta += [(sx(hp[0]), sy(hp[1]))]
+
+    # Ensure path stays strictly on top of drawn corridor DXF lines
+    if dugumler and len(dugumler) >= 2:
+        nokta = [(sx(p[0]), sy(p[1])) for p in dugumler]
+    elif dugumler and len(dugumler) == 1:
+        nokta = [(sx(bp[0]), sy(bp[1])), (sx(dugumler[0][0]), sy(dugumler[0][1]))]
+    else:
+        nokta = [(sx(bp[0]), sy(bp[1])), (sx(hp[0]), sy(hp[1]))]
+
     d = "M " + " L ".join(f"{x:.1f} {y:.1f}" for x, y in nokta)
 
     s = [f'<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 {W:.0f} {H:.0f}" '
@@ -423,6 +445,8 @@ def _multi_floor_route(bas_kat, baslangic_ad, hedef_kat, hedef_ad, tercih="MERDI
                         p1, p2 = data["rooms"][r1], data["rooms"][r2]
                         G.add_edge((kat, r1), (kat, r2), weight=_mesafe(p1, p2) or 5.0)
 
+    target_block = blok_bul(hedef_ad) or blok_bul(baslangic_ad)
+
     katlar_list = list(_KATLAR.keys())
     for i in range(len(katlar_list)):
         for j in range(i + 1, len(katlar_list)):
@@ -433,7 +457,24 @@ def _multi_floor_route(bas_kat, baslangic_ad, hedef_kat, hedef_ad, tercih="MERDI
                 if any(k in gecis_ad.upper() for k in GECIS_ANAHTARLARI):
                     is_esc = any(k in gecis_ad.upper() for k in ["YÜRÜYEN", "YURUYEN", "ESCALATOR"])
                     base_w = 1.5 if is_esc else 2.5
-                    G.add_edge((k1, gecis_ad), (k2, gecis_ad), weight=base_w * dist_floors)
+                    
+                    # Blok eşleşmesi kontrolü: eğer hedef A bloğundaysa A merdiven/asansörüne öncelik ver
+                    stair_blk = blok_bul(gecis_ad)
+                    block_penalty = 0.0
+                    if target_block and not is_esc:
+                        if stair_blk and stair_blk != target_block:
+                            block_penalty = 500.0  # Hedef blok ile eşleşmeyen merdivenlere yüksek ceza
+
+                    # Kullanıcı tercihi (Asansör / Merdiven)
+                    pref_penalty = 0.0
+                    u_gecis = gecis_ad.upper()
+                    if tercih in ["ASANSÖR", "ASANSOR"] and ("MERDİVEN" in u_gecis or "MERDIVEN" in u_gecis):
+                        pref_penalty = 25.0
+                    elif tercih in ["MERDİVEN", "MERDIVEN"] and ("ASANSÖR" in u_gecis or "ASANSOR" in u_gecis):
+                        pref_penalty = 25.0
+
+                    weight = (base_w * dist_floors) + block_penalty + pref_penalty
+                    G.add_edge((k1, gecis_ad), (k2, gecis_ad), weight=weight)
 
     # أي طالب في طابق أعلى من أو يساوي -1 يتجه إلى kat-3 يُمنع عنه السلالم العادية المتصلة بـ kat-3 ويُجبر على الدرج الكهربائي
     if (_kat_degeri(bas_kat) >= -1 and _kat_degeri(hedef_kat) == -3) or (_kat_degeri(hedef_kat) >= -1 and _kat_degeri(bas_kat) == -3):
