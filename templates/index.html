@@ -2120,9 +2120,10 @@ function startMover(svg) {
   }
 
   const len = path.getTotalLength();
-  const dist = (oldMover && parseFloat(oldMover.dataset.mesafe)) || 10;
-  const vSpeedMetersPerSec = 2.4; // Constant uniform walking speed across all floor maps
-  const walkDuration = Math.max(2400, (dist / vSpeedMetersPerSec) * 1000);
+  const isZemin = currentStage && (currentStage.kat === 'zemin' || currentStage.kat === 'Z' || currentStage.kat === 'z');
+  // Uniform walking speed based on path pixel length across all floors, with Z floor (zemin) set slightly slower per user request
+  const pixelsPerSec = isZemin ? 85 : 120;
+  const walkDuration = Math.max(2500, (len / pixelsPerSec) * 1000);
 
   let start = null;
   let isArrived = false;
