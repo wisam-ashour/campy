@@ -11,7 +11,7 @@ import re
 import ezdxf
 import networkx as nx
 from ezdxf.tools.text import plain_text
-from shapely.geometry import LineString
+from shapely.geometry import LineString, MultiLineString
 from shapely.ops import unary_union
 
 # kat_adi -> {"walls":..., "rooms":..., "bounds":..., "graph":..., "poi":...}
@@ -139,8 +139,21 @@ def kat_yukle(kat_adi, dxf_yolu):
 
     poi = {}
     if graf.number_of_nodes() > 0:
+        # Build Shapely MultiLineString for wall geometry to ensure POIs snap through open doors
+        wall_lines = [LineString(pts) for pts in walls if len(pts) >= 2]
+        walls_geom = MultiLineString(wall_lines) if wall_lines else None
+        graph_nodes = list(graf.nodes)
+
         for ad, pos in rooms.items():
-            poi[ad] = min(graf.nodes, key=lambda n: _mesafe(pos, n))
+            sorted_nodes = sorted(graph_nodes, key=lambda n: _mesafe(pos, n))
+            valid_node = None
+            if walls_geom:
+                for n in sorted_nodes[:30]:
+                    ray = LineString([pos, n])
+                    if not ray.intersects(walls_geom):
+                        valid_node = n
+                        break
+            poi[ad] = valid_node or sorted_nodes[0]
 
     _KATLAR[kat_adi] = {
         "walls": walls, "rooms": rooms, "graph": graf, "poi": poi,
