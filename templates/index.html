@@ -1038,6 +1038,9 @@ html, body {
 
   <!-- Floating Top Bar -->
   <div class="map-top-bar">
+    <button class="back-btn" onclick="resetToHome()" style="pointer-events:auto; font-size:13px; padding: 7px 14px;">
+      <span id="map-back-dest-btn">← اختيار وجهة جديدة</span>
+    </button>
     <!-- Floor Selector Pills -->
     <div class="floor-badge" id="floor-badge"></div>
   </div>
@@ -1063,7 +1066,7 @@ html, body {
     <div class="drawer-handle-bar" onclick="toggleDrawer()">
       <div class="drawer-handle-line"></div>
       <div class="drawer-summary-strip">
-        <span id="drawer-quick-text">⚙️ Rotayı Değiştir / Ayarlar</span>
+        <span id="drawer-quick-text">⚙️ خيارات وتعديل المسار</span>
         <span id="drawer-toggle-icon">▲</span>
       </div>
     </div>
@@ -1072,16 +1075,16 @@ html, body {
       <!-- Edit controls inside drawer -->
       <div class="drawer-edit" id="drawer-edit">
         <div class="wizard-input-wrap">
-          <input class="wizard-input" id="edit-dest" autocomplete="off" placeholder="Hedef Değiştir...">
+          <input class="wizard-input" id="edit-dest" autocomplete="off" placeholder="تغيير الوجهة (مثال: A120، B205...)">
           <div class="sug" id="sug-edit-dest"></div>
         </div>
         <div class="wizard-input-wrap">
-          <input class="wizard-input" id="edit-origin" autocomplete="off" placeholder="Konum Değiştir...">
+          <input class="wizard-input" id="edit-origin" autocomplete="off" placeholder="تغيير الموقع (مثال: المدخل الرئيسي...)">
           <div class="sug" id="sug-edit-origin"></div>
         </div>
         <div style="display: flex; gap: 10px;">
-          <button class="wizard-btn" style="height: 46px; font-size: 15px;" id="btn-edit" onclick="reRoute()">Yeniden Hesapla</button>
-          <button class="wizard-btn" style="height: 46px; font-size: 15px; background: rgba(255,255,255,0.1); box-shadow: none;" onclick="resetToHome()">Ana Sayfa</button>
+          <button class="wizard-btn" style="height: 46px; font-size: 15px;" id="btn-edit" onclick="reRoute()">تحديث المسار</button>
+          <button class="wizard-btn" style="height: 46px; font-size: 15px; background: rgba(255,255,255,0.1); box-shadow: none;" id="btn-back-dest-page" onclick="resetToHome()">← اختيار وجهة جديدة</button>
         </div>
       </div>
 
@@ -1144,7 +1147,10 @@ const T = {
     errorNoRoute: "لم نتمكن من العثور على طريق لهذا المكان.",
     drawerQuickText: "⚙️ خيارات وتعديل المسار",
     home: "الرئيسية",
-    arrived: "لقد وصلت إلى وجهتك! 🎉"
+    arrived: "لقد وصلت إلى وجهتك! 🎉",
+    placeholderEditDest: "تغيير الوجهة (مثال: A120، B205...)",
+    placeholderEditOrigin: "تغيير الموقع (مثال: المدخل الرئيسي...)",
+    btnBackDestPage: "← اختيار وجهة جديدة"
   },
   tr: {
     unionBadge: "Biruni Üniversitesi Arap Öğrenciler Birliği",
@@ -1189,7 +1195,10 @@ const T = {
     errorNoRoute: "Bu yer bulunamadı veya rota mevcut değil.",
     drawerQuickText: "⚙️ Rotayı Değiştir / Ayarlar",
     home: "Ana Sayfa",
-    arrived: "Hedefe ulaştınız! 🎉"
+    arrived: "Hedefe ulaştınız! 🎉",
+    placeholderEditDest: "Hedef Değiştir (Örn: A120, B205...)",
+    placeholderEditOrigin: "Konum Değiştir (Örn: Ana Giriş...)",
+    btnBackDestPage: "← Yeni Hedef Seç"
   },
   en: {
     unionBadge: "Biruni University Arab Students Association",
@@ -1234,7 +1243,10 @@ const T = {
     errorNoRoute: "Location not found or no route available.",
     drawerQuickText: "⚙️ Edit Route / Settings",
     home: "Home",
-    arrived: "You have arrived! 🎉"
+    arrived: "You have arrived! 🎉",
+    placeholderEditDest: "Change Destination (e.g. A120, B205...)",
+    placeholderEditOrigin: "Change Location (e.g. Main Entrance...)",
+    btnBackDestPage: "← Choose New Destination"
   }
 };
 
@@ -1301,6 +1313,15 @@ function applyLangToUI() {
   if (drawerQuickText) drawerQuickText.textContent = t.drawerQuickText;
   const btnEdit = document.getElementById('btn-edit');
   if (btnEdit) btnEdit.textContent = t.reStart;
+  const btnBackHome = document.getElementById('btn-back-dest-page');
+  if (btnBackHome) btnBackHome.textContent = t.btnBackDestPage;
+  const mapBackDestBtn = document.getElementById('map-back-dest-btn');
+  if (mapBackDestBtn) mapBackDestBtn.textContent = t.btnBackDestPage;
+
+  const editDest = document.getElementById('edit-dest');
+  if (editDest) editDest.placeholder = t.placeholderEditDest;
+  const editOrigin = document.getElementById('edit-origin');
+  if (editOrigin) editOrigin.placeholder = t.placeholderEditOrigin;
 
   // Destination Quick Cards
   const destChips = document.getElementById('dest-chips');
@@ -1693,9 +1714,9 @@ async function startRoute() {
     </div>
   `;
 
-  // Sync edit fields inside drawer
-  document.getElementById('edit-dest').value = dest;
-  document.getElementById('edit-origin').value = (origin === 'START_POINT') ? '' : origin;
+  // Leave edit fields inside drawer empty so user starts blank with placeholder
+  document.getElementById('edit-dest').value = '';
+  document.getElementById('edit-origin').value = '';
 
   try {
     const res = await fetch('/api/rota', {
