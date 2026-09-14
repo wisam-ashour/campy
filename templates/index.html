@@ -1470,15 +1470,15 @@ function normStr(str) {
 }
 
 const SEARCH_ALIASES = [
-  // Mosque / Mescit / المصلى والجامع
+  // Mosque / Mescit / المصلى والجامع / المساجد التعليمية
   {
     target: 'BAY MESCIT',
-    aliases: ['مسجد', 'مصلى', 'جامع', 'صلاة', 'صلاه', 'mescit', 'cami', 'mosque', 'prayer', 'bay mescit'],
+    aliases: ['مسجد', 'مصلى', 'جامع', 'صلاة', 'صلاه', 'mescit', 'cami', 'mosque', 'prayer', 'bay mescit', 'المسجد', 'المصلى', 'الجامع', 'تعليمي', 'المساجد التعليمية', 'مسجد تعليمي', 'جامع تعليمي', 'مصلى الرجال', 'مسجد الرجال', 'المساجد', 'المساجد التعليميه'],
     label: { ar: '🕌 المصلى والجامع (رجال)', tr: '🕌 Mescit (Bay)', en: '🕌 Prayer Room (Men)' }
   },
   {
     target: 'BAYAN MESCIT',
-    aliases: ['مسجد نساء', 'مصلى نساء', 'جامع نساء', 'صلاة نساء', 'صلاه نساء', 'bayan mescit', 'women prayer'],
+    aliases: ['مسجد نساء', 'مصلى نساء', 'جامع نساء', 'صلاة نساء', 'صلاه نساء', 'bayan mescit', 'women prayer', 'المسجد نساء', 'المصلى نساء', 'المساجد التعليمية نساء', 'مسجد تعليمي نساء', 'جامع تعليمي نساء', 'مصلى النساء', 'مسجد النساء', 'المساجد التعليميه نساء'],
     label: { ar: '🕌 المصلى والجامع (نساء)', tr: '🕌 Mescit (Bayan)', en: '🕌 Prayer Room (Women)' }
   },
 
@@ -1626,14 +1626,16 @@ const SEARCH_ALIASES = [
 function getKatTag(m) {
   const uM = (m || '').toUpperCase();
   if (uM.includes('AB3') || uM.includes('BB3') || uM.includes('CB3') || uM.includes('-3') || uM.includes('SPOR SALON')) {
-    return (lang === 'ar') ? 'طابق البدروم 3-' : (lang === 'en' ? 'Basement -3' : 'Bodrum -3');
-  } else if (uM.includes('AB2') || uM.includes('BB2') || uM.includes('CB2') || uM.includes('-2')) {
-    return (lang === 'ar') ? 'طابق البدروم 2-' : (lang === 'en' ? 'Basement -2' : 'Bodrum -2');
+    return (lang === 'ar') ? 'الطابق 3-' : (lang === 'en' ? 'Floor -3' : 'Kat -3');
+  } else if (uM.includes('AB2') || uM.includes('BB2') || uM.includes('CB2') || uM.includes('-2') || uM.includes('MESCIT')) {
+    return (lang === 'ar') ? 'الطابق 2-' : (lang === 'en' ? 'Floor -2' : 'Kat -2');
+  } else if (uM.includes('AB1') || uM.includes('BB1') || uM.includes('CB1') || uM.includes('-1') || uM.includes('REVIR') || uM.includes('KIRTASIYE')) {
+    return (lang === 'ar') ? 'الطابق 1-' : (lang === 'en' ? 'Floor -1' : 'Kat -1');
   } else if (uM.includes('AZ') || uM.includes('ZEMIN') || uM.includes('START') || uM.includes('GİRİŞ')) {
     return (lang === 'ar') ? 'الطابق الأرضي' : (lang === 'en' ? 'Ground Floor' : 'Zemin Kat');
   } else if (uM.match(/\d/)) {
     const num = uM.match(/\d/)[0];
-    return (lang === 'ar') ? `الطابق ${num}` : (lang === 'en' ? `Floor ${num}` : `${num}. Kat`);
+    return (lang === 'ar') ? `الطابق ${num}` : (lang === 'en' ? `Floor ${num}` : `Kat ${num}`);
   }
   return (lang === 'ar') ? 'مكان' : (lang === 'en' ? 'Location' : 'Mekan');
 }
@@ -1975,43 +1977,47 @@ function showFloorMap(idx) {
   container.insertBefore(svg, container.firstChild);
   setupNativeTouchGestures(svg);
 
-  // Pan Zoom Init immediately before startMover
-  try {
-    pzInstance = svgPanZoom('#route-svg', {
-      zoomEnabled: true,
-      controlIconsEnabled: false,
-      fit: true,
-      center: true,
-      minZoom: 0.4,
-      maxZoom: 8
-    });
-    if (!isFullMapView) {
-      pzInstance.zoomAtPoint(2.2, { x: container.clientWidth / 2, y: container.clientHeight / 2 });
-    }
-  } catch (e) {}
-
-  startMover(svg);
-
-  // Floor Pill Badges
+  // Floor Pill Badges: Always visible showing active floor(s)
   const badgeContainer = document.getElementById('floor-badge');
+  if (badgeContainer) {
+    badgeContainer.style.display = 'flex';
+    if (routeData && routeData.asamalar && routeData.asamalar.length > 0) {
+      badgeContainer.innerHTML = routeData.asamalar.map((s, i) => {
+        const lbl = getFloorLabel(s.kat);
+        return `<div class="floor-pill ${(i === idx) ? 'active' : ''}" onclick="showFloorMap(${i})">${lbl}</div>`;
+      }).join('');
+    }
+  }
+
   const currentStageKat = stage ? stage.kat : 'zemin';
   const currentFloorLabel = getFloorLabel(currentStageKat);
-  
   const floorTxtEl = document.getElementById('building-floor-txt');
   if (floorTxtEl) floorTxtEl.textContent = currentFloorLabel;
 
-  if (routeData.asamalar.length > 1) {
-    badgeContainer.style.display = 'flex';
-    badgeContainer.innerHTML = routeData.asamalar.map((s, i) => {
-      const lbl = getFloorLabel(s.kat);
-      return `<div class="floor-pill ${(i === idx) ? 'active' : ''}" onclick="showFloorMap(${i})">${lbl}</div>`;
-    }).join('');
-  } else {
-    badgeContainer.style.display = 'none';
-  }
-
   // Multi-floor Transition overlay
   updateTransitionOverlay();
+
+  // Initialize Pan Zoom after layout is rendered
+  setTimeout(() => {
+    try {
+      pzInstance = svgPanZoom('#route-svg', {
+        zoomEnabled: true,
+        controlIconsEnabled: false,
+        fit: true,
+        center: true,
+        minZoom: 0.4,
+        maxZoom: 8
+      });
+      if (!isFullMapView && container.clientWidth > 0) {
+        pzInstance.zoomAtPoint(2.2, { x: container.clientWidth / 2, y: container.clientHeight / 2 });
+      }
+    } catch (e) {
+      console.warn("svgPanZoom init warning", e);
+    }
+  }, 120);
+
+  // Start mascot path animation
+  startMover(svg);
 }
 
 // ════════════════ MAP CONTROLS ════════════════
