@@ -1089,6 +1089,7 @@ const T = {
     goToFloor: "انتقل إلى",
     viaStairs: "عبر السلالم 🪜",
     viaElevator: "عبر المصعد 🛗",
+    viaEscalator: "عبر الدرج الكهربائي ⚡",
     floor0: "الأرضي",
     floor1: "الطابق 1",
     floor2: "الطابق 2",
@@ -1126,6 +1127,7 @@ const T = {
     goToFloor: "Kata Geç:",
     viaStairs: "Merdiven ile 🪜",
     viaElevator: "Asansör ile 🛗",
+    viaEscalator: "Yürüyen Merdiven ile ⚡",
     floor0: "Zemin Kat",
     floor1: "1. Kat",
     floor2: "2. Kat",
@@ -1163,6 +1165,7 @@ const T = {
     goToFloor: "Go to",
     viaStairs: "Via Stairs 🪜",
     viaElevator: "Via Elevator 🛗",
+    viaEscalator: "Via Escalator ⚡",
     floor0: "Ground",
     floor1: "1st Floor",
     floor2: "2nd Floor",
@@ -1812,14 +1815,23 @@ function startMover(svg) {
           isArrived = true;
           if (bubble && bubbleTxt) {
             const nextStage = routeData.asamalar[nextIdx];
-            const isElevator = (currentStage.hedef || '').toUpperCase().includes('ASANSOR') || (currentStage.hedef || '').toUpperCase().includes('ASANSÖR');
-            const viaText = isElevator ? t.viaElevator : t.viaStairs;
-            const targetFloorText = nextStage.kat === 'zemin' ? t.floor0 : `${nextStage.kat.replace('kat', '')}. Kat`;
+            const targetUpper = (currentStage.hedef || '').toUpperCase();
+            const isElevator = targetUpper.includes('ASANSOR') || targetUpper.includes('ASANSÖR');
+            const isEscalator = targetUpper.includes('YÜRÜYEN') || targetUpper.includes('YURUYEN') || targetUpper.includes('ESCALATOR');
+            const viaText = isElevator ? t.viaElevator : (isEscalator ? t.viaEscalator : t.viaStairs);
+            
+            let targetFloorText = nextStage.kat === 'zemin' ? t.floor0 : `${nextStage.kat.replace('kat', '')}. Kat`;
+            if (nextStage.kat.startsWith('kat-')) {
+              targetFloorText = (lang === 'ar') ? `طابق البدروم ${nextStage.kat.replace('kat-', '')}-` : `Bodrum ${nextStage.kat.replace('kat', '')}`;
+            }
             showDynamicCampyBubble(bubble, bubbleTxt, `👇 ${t.goToFloor} ${targetFloorText} (${viaText}) ➔`);
           }
-          const toastMsg = (lang === 'ar') ? "🪜 وصل كامبي إلى السلالم! اضغط على كامبي للانتقال للطابق التالي" :
-                           (lang === 'tr') ? "🪜 Campy merdivenlere ulaştı! Sonraki kata geçmek için Campy'ye dokunun" :
-                           "🪜 Campy reached the stairs! Tap Campy to go to next floor";
+          const targetUpper = (currentStage.hedef || '').toUpperCase();
+          const isElev = targetUpper.includes('ASANSOR') || targetUpper.includes('ASANSÖR');
+          const isEsc = targetUpper.includes('YÜRÜYEN') || targetUpper.includes('YURUYEN') || targetUpper.includes('ESCALATOR');
+          const toastMsg = (lang === 'ar') ? (isElev ? "🛗 وصل كامبي إلى المصعد! اضغط على كامبي للانتقال للطابق التالي" : (isEsc ? "⚡ وصل كامبي إلى الدرج الكهربائي! اضغط على كامبي للانتقال للطابق التالي" : "🪜 وصل كامبي إلى السلالم! اضغط على كامبي للانتقال للطابق التالي")) :
+                           (lang === 'tr') ? (isElev ? "🛗 Campy asansöre ulaştı! Dokunun" : (isEsc ? "⚡ Campy yürüyen merdivene ulaştı! Dokunun" : "🪜 Campy merdivenlere ulaştı! Dokunun")) :
+                           (isElev ? "🛗 Campy reached the elevator! Tap Campy" : (isEsc ? "⚡ Campy reached the escalator! Tap Campy" : "🪜 Campy reached the stairs! Tap Campy"));
           showToast(toastMsg);
         }
       } else {

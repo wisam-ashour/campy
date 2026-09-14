@@ -17,7 +17,7 @@ from shapely.ops import unary_union
 # kat_adi -> {"walls":..., "rooms":..., "bounds":..., "graph":..., "poi":...}
 _KATLAR = {}
 _BASLANGIC_KAT = None          # START_POINT hangi kattaysa
-GECIS_ANAHTARLARI = ("MERDIVEN", "ASANSÖR", "ASANSOR")
+GECIS_ANAHTARLARI = ("MERDIVEN", "ASANSÖR", "ASANSOR", "YÜRÜYEN", "YURUYEN", "ESCALATOR")
 
 
 def _mesafe(p1, p2):
@@ -232,6 +232,8 @@ def _yonlendirme_olustur(dugumler):
 
 def _oda_simgesi(ad):
     u = ad.upper()
+    if "YÜRÜYEN" in u or "YURUYEN" in u or "ESCALATOR" in u:
+        return "🪜⚡"
     if "KÜTÜPHANE" in u or "KUTUPHANE" in u:
         return "📚"
     if "KAFE" in u or "CAFETERIA" in u or "RESTORAN" in u:
@@ -401,10 +403,13 @@ def rota(hedef_ad, baslangic_ad="START_POINT", tercih="MERDIVEN"):
     yon_1 = _yonlendirme_olustur(yol_noktalari_1)
     yon_2 = _yonlendirme_olustur(yol_noktalari_2)
     
-    gecis_tipi = "elevator" if "ASANS" in gecis.upper() else "stairs"
-    gecis_tr = "Asansör" if gecis_tipi == "elevator" else "Merdiven"
-    gecis_en = "elevator" if gecis_tipi == "elevator" else "stairs"
-    gecis_ar = "المصعد" if gecis_tipi == "elevator" else "الدرج"
+    u_gecis = gecis.upper()
+    if any(k in u_gecis for k in ["ASANSÖR", "ASANSOR"]):
+        gecis_tipi, gecis_tr, gecis_en, gecis_ar = "elevator", "Asansör", "elevator", "المصعد"
+    elif any(k in u_gecis for k in ["YÜRÜYEN", "YURUYEN", "ESCALATOR"]):
+        gecis_tipi, gecis_tr, gecis_en, gecis_ar = "escalator", "Yürüyen Merdiven", "escalator", "الدرج الكهربائي"
+    else:
+        gecis_tipi, gecis_tr, gecis_en, gecis_ar = "stairs", "Merdiven", "stairs", "الدرج"
     
     if hedef_kat == "zemin":
         hedef_kat_str_tr, hedef_kat_str_en, hedef_kat_str_ar = "zemin kata", "ground floor", "الطابق الأرضي"
