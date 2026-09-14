@@ -1347,8 +1347,16 @@ function setupSug(inputId, sugId) {
 
     box.innerHTML = list.map(m => {
       let katTag = 'Mekan';
-      if (m.includes('Z')) katTag = 'Zemin Kat';
-      else if (m.match(/\d/)) katTag = `${m.match(/\d/)[0]}. Kat`;
+      const uM = m.toUpperCase();
+      if (uM.includes('AB3') || uM.includes('BB3') || uM.includes('CB3') || uM.includes('-3') || uM.includes('KÜTÜPHANE -3') || uM.includes('SPOR SALON')) {
+        katTag = (lang === 'ar') ? 'طابق البدروم 3-' : 'Bodrum -3';
+      } else if (uM.includes('AB2') || uM.includes('BB2') || uM.includes('CB2') || uM.includes('-2')) {
+        katTag = (lang === 'ar') ? 'طابق البدروم 2-' : 'Bodrum -2';
+      } else if (uM.includes('AZ') || uM.includes('ZEMIN') || uM.includes('START') || uM.includes('GİRİŞ')) {
+        katTag = (lang === 'ar') ? 'الطابق الأرضي' : 'Zemin Kat';
+      } else if (uM.match(/\d/)) {
+        katTag = (lang === 'ar') ? `الطابق ${uM.match(/\d/)[0]}` : `${uM.match(/\d/)[0]}. Kat`;
+      }
       return `<div><span>${m}</span><span class="room-tag">${katTag}</span></div>`;
     }).join('');
 
