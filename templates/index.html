@@ -1997,7 +1997,7 @@ function showFloorMap(idx) {
   // Multi-floor Transition overlay
   updateTransitionOverlay();
 
-  // Initialize Pan Zoom after layout is rendered
+  // Initialize Pan Zoom and focus directly on CAMPY starting point
   setTimeout(() => {
     try {
       pzInstance = svgPanZoom('#route-svg', {
@@ -2008,13 +2008,22 @@ function showFloorMap(idx) {
         minZoom: 0.4,
         maxZoom: 8
       });
-      if (!isFullMapView && container.clientWidth > 0) {
-        pzInstance.zoomAtPoint(2.2, { x: container.clientWidth / 2, y: container.clientHeight / 2 });
+      const path = svg.querySelector('.campy-route-path');
+      if (path && !isFullMapView) {
+        const pt0 = path.getPointAtLength(0);
+        pzInstance.zoom(2.2);
+        const sizes = pzInstance.getSizes();
+        if (sizes && sizes.realZoom) {
+          const zoom = sizes.realZoom;
+          const targetX = (sizes.width / 2) - (pt0.x * zoom);
+          const targetY = (sizes.height / 2) - (pt0.y * zoom);
+          pzInstance.pan({ x: targetX, y: targetY });
+        }
       }
     } catch (e) {
       console.warn("svgPanZoom init warning", e);
     }
-  }, 120);
+  }, 60);
 
   // Start mascot path animation
   startMover(svg);
@@ -2242,82 +2251,89 @@ function startMover(svg) {
   };
 
   function step(ts) {
-    if (!robotG.isConnected) return;
+    if (!robotG || !robotG.isConnected || !path || !path.isConnected) return;
     if (start === null) start = ts;
 
-    const elapsed = ts - start;
-    const bubble = robotG.querySelector('#campy-map-bubble');
-    const bubbleTxt = robotG.querySelector('#campy-bubble-txt');
-    const innerG = robotG.querySelector('#campy-inner-scale');
-    const visorG = robotG.querySelector('#campy-visor-g');
+    try {
+      const elapsed = ts - start;
+      const bubble = robotG.querySelector('#campy-map-bubble');
+      const bubbleTxt = robotG.querySelector('#campy-bubble-txt');
+      const innerG = robotG.querySelector('#campy-inner-scale');
+      const visorG = robotG.querySelector('#campy-visor-g');
 
-    if (elapsed < walkDuration) {
-      // Walking along the path towards stairs / target
-      const progress = elapsed / walkDuration;
-      const pt = path.getPointAtLength(progress * len);
-      robotG.setAttribute('transform', `translate(${pt.x.toFixed(1)}, ${pt.y.toFixed(1)})`);
-      if (bubble) bubble.style.display = 'none';
+      if (elapsed < walkDuration) {
+        // Walking along the path towards stairs / target
+        const progress = elapsed / walkDuration;
+        const pt = path.getPointAtLength(progress * len);
+        robotG.setAttribute('transform', `translate(${pt.x.toFixed(1)}, ${pt.y.toFixed(1)})`);
+        if (bubble) bubble.style.display = 'none';
 
-      // Dynamic Camera Tracking: Center view on Campy as he moves
-      if (isCamTrack && pzInstance) {
-        try {
-          const sizes = pzInstance.getSizes();
-          const zoom = sizes.realZoom;
-          const targetX = (sizes.width / 2) - (pt.x * zoom);
-          const targetY = (sizes.height / 2) - (pt.y * zoom);
-          pzInstance.pan({ x: targetX, y: targetY });
-        } catch (e) {}
-      }
-
-      requestAnimationFrame(step);
-    } else {
-      // Reached the end of path on current floor
-      const pt = path.getPointAtLength(len);
-      robotG.setAttribute('transform', `translate(${pt.x.toFixed(1)}, ${pt.y.toFixed(1)})`);
-
-      if (isCamTrack && pzInstance) {
-        try {
-          const sizes = pzInstance.getSizes();
-          const zoom = sizes.realZoom;
-          pzInstance.pan({ x: (sizes.width / 2) - (pt.x * zoom), y: (sizes.height / 2) - (pt.y * zoom) });
-        } catch (e) {}
-      }
-
-      if (hasNextFloor) {
-        // INTERMEDIATE FLOOR: Park at stairs with glowing speech bubble + toast guidance prompt.
-        if (!isArrived) {
-          isArrived = true;
-          if (bubble && bubbleTxt) {
-            const nextStage = routeData.asamalar[nextIdx];
-            const targetUpper = (currentStage.hedef || '').toUpperCase();
-            const isElevator = targetUpper.includes('ASANSOR') || targetUpper.includes('ASANSÖR');
-            const isEscalator = targetUpper.includes('YÜRÜYEN') || targetUpper.includes('YURUYEN') || targetUpper.includes('ESCALATOR');
-            const viaText = isElevator ? t.viaElevator : (isEscalator ? t.viaEscalator : t.viaStairs);
-            
-            const targetFloorText = getFloorLabel(nextStage.kat);
-            showDynamicCampyBubble(bubble, bubbleTxt, `👇 ${t.goToFloor} ${targetFloorText} (${viaText}) ➔`);
-          }
-          const targetUpper = (currentStage.hedef || '').toUpperCase();
-          const isElev = targetUpper.includes('ASANSOR') || targetUpper.includes('ASANSÖR');
-          const isEsc = targetUpper.includes('YÜRÜYEN') || targetUpper.includes('YURUYEN') || targetUpper.includes('ESCALATOR');
-          const toastMsg = (lang === 'ar') ? (isElev ? "🛗 وصل كامبي إلى المصعد! اضغط على كامبي للانتقال للطابق التالي" : (isEsc ? "⚡ وصل كامبي إلى الدرج الكهربائي! اضغط على كامبي للانتقال للطابق التالي" : "🪜 وصل كامبي إلى السلالم! اضغط على كامبي للانتقال للطابق التالي")) :
-                           (lang === 'tr') ? (isElev ? "🛗 Campy asansöre ulaştı! Dokunun" : (isEsc ? "⚡ Campy yürüyen merdivene ulaştı! Dokunun" : "🪜 Campy merdivenlere ulaştı! Dokunun")) :
-                           (isElev ? "🛗 Campy reached the elevator! Tap Campy" : (isEsc ? "⚡ Campy reached the escalator! Tap Campy" : "🪜 Campy reached the stairs! Tap Campy"));
-          showToast(toastMsg);
+        // Dynamic Camera Tracking: Center view on Campy as he moves
+        if (isCamTrack && pzInstance) {
+          try {
+            const sizes = pzInstance.getSizes();
+            if (sizes && sizes.realZoom) {
+              const zoom = sizes.realZoom;
+              const targetX = (sizes.width / 2) - (pt.x * zoom);
+              const targetY = (sizes.height / 2) - (pt.y * zoom);
+              pzInstance.pan({ x: targetX, y: targetY });
+            }
+          } catch (e) {}
         }
+
+        requestAnimationFrame(step);
       } else {
-        // DESTINATION FLOOR: Arrived at final target room!
-        // Enlarge Campy (scale 2.6x), switch visor to happy closed-eyes smile ^ ‿ ^, show speech bubble above Campy!
-        if (!isArrived) {
-          isArrived = true;
-          if (innerG) innerG.setAttribute('transform', 'scale(2.6) translate(-16, -16)');
-          if (visorG) visorG.innerHTML = joyfulSmileVisorSvg;
-          if (bubble && bubbleTxt) {
-            const finalDestName = (currentStage && currentStage.hedef) ? currentStage.hedef : '';
-            showDynamicCampyBubble(bubble, bubbleTxt, `${t.arrived}: ${finalDestName}! 🎉`);
+        // Reached the end of path on current floor
+        const pt = path.getPointAtLength(len);
+        robotG.setAttribute('transform', `translate(${pt.x.toFixed(1)}, ${pt.y.toFixed(1)})`);
+
+        if (isCamTrack && pzInstance) {
+          try {
+            const sizes = pzInstance.getSizes();
+            if (sizes && sizes.realZoom) {
+              const zoom = sizes.realZoom;
+              pzInstance.pan({ x: (sizes.width / 2) - (pt.x * zoom), y: (sizes.height / 2) - (pt.y * zoom) });
+            }
+          } catch (e) {}
+        }
+
+        if (hasNextFloor) {
+          // INTERMEDIATE FLOOR: Park at stairs with glowing speech bubble + toast guidance prompt.
+          if (!isArrived) {
+            isArrived = true;
+            if (bubble && bubbleTxt) {
+              const nextStage = routeData.asamalar[nextIdx];
+              const targetUpper = (currentStage.hedef || '').toUpperCase();
+              const isElevator = targetUpper.includes('ASANSOR') || targetUpper.includes('ASANSÖR');
+              const isEscalator = targetUpper.includes('YÜRÜYEN') || targetUpper.includes('YURUYEN') || targetUpper.includes('ESCALATOR');
+              const viaText = isElevator ? t.viaElevator : (isEscalator ? t.viaEscalator : t.viaStairs);
+              
+              const targetFloorText = getFloorLabel(nextStage.kat);
+              showDynamicCampyBubble(bubble, bubbleTxt, `👇 ${t.goToFloor} ${targetFloorText} (${viaText}) ➔`);
+            }
+            const targetUpper = (currentStage.hedef || '').toUpperCase();
+            const isElev = targetUpper.includes('ASANSOR') || targetUpper.includes('ASANSÖR');
+            const isEsc = targetUpper.includes('YÜRÜYEN') || targetUpper.includes('YURUYEN') || targetUpper.includes('ESCALATOR');
+            const toastMsg = (lang === 'ar') ? (isElev ? "🛗 وصل كامبي إلى المصعد! اضغط على كامبي للانتقال للطابق التالي" : (isEsc ? "⚡ وصل كامبي إلى الدرج الكهربائي! اضغط على كامبي للانتقال للطابق التالي" : "🪜 وصل كامبي إلى السلالم! اضغط على كامبي للانتقال للطابق التالي")) :
+                             (lang === 'tr') ? (isElev ? "🛗 Campy asansöre ulaştı! Dokunun" : (isEsc ? "⚡ Campy yürüyen merdivene ulaştı! Dokunun" : "🪜 Campy merdivenlere ulaştı! Dokunun")) :
+                             (isElev ? "🛗 Campy reached the elevator! Tap Campy" : (isEsc ? "⚡ Campy reached the escalator! Tap Campy" : "🪜 Campy reached the stairs! Tap Campy"));
+            showToast(toastMsg);
+          }
+        } else {
+          // DESTINATION FLOOR: Arrived at final target room!
+          if (!isArrived) {
+            isArrived = true;
+            if (innerG) innerG.setAttribute('transform', 'scale(2.6) translate(-16, -16)');
+            if (visorG) visorG.innerHTML = joyfulSmileVisorSvg;
+            if (bubble && bubbleTxt) {
+              const finalDestName = (currentStage && currentStage.hedef) ? currentStage.hedef : '';
+              showDynamicCampyBubble(bubble, bubbleTxt, `${t.arrived}: ${finalDestName}! 🎉`);
+            }
           }
         }
       }
+    } catch (err) {
+      console.warn("Mover animation step error", err);
     }
   }
 
