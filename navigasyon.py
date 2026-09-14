@@ -389,13 +389,13 @@ def rota(hedef_ad, baslangic_ad="START_POINT", tercih="MERDIVEN"):
     gecis = _gecis_sec(blok_bul(hedef_ad), bas_kat, hedef_kat, tercih)
     if gecis is None:
         gecis = _gecis_sec(blok_bul(baslangic_ad), bas_kat, hedef_kat, tercih)
-    if gecis is None:
-        return None
+    
+    d1, m1 = (_yol(bas_kat, baslangic_ad, gecis) if gecis else (None, 0))
+    d2, m2 = (_yol(hedef_kat, gecis, hedef_ad) if gecis else (None, 0))
 
-    d1, m1 = _yol(bas_kat, baslangic_ad, gecis)
-    d2, m2 = _yol(hedef_kat, gecis, hedef_ad)
-    if d1 is None or d2 is None:
-        return None
+    if gecis is None or d1 is None or d2 is None:
+        # Doğrudan tek geçiş yoksa çok aşamalı (ör: zemin -> kat-1 -> kat-3) rotayı hesapla
+        return _multi_floor_route(bas_kat, baslangic_ad, hedef_kat, hedef_ad, tercih)
         
     yol_noktalari_1 = [_KATLAR[bas_kat]["rooms"][baslangic_ad]] + (d1 or []) + [_KATLAR[bas_kat]["rooms"][gecis]]
     yol_noktalari_2 = [_KATLAR[hedef_kat]["rooms"][gecis]] + (d2 or []) + [_KATLAR[hedef_kat]["rooms"][hedef_ad]]
@@ -449,6 +449,116 @@ def rota(hedef_ad, baslangic_ad="START_POINT", tercih="MERDIVEN"):
         ],
         "mesafe": round(toplam, 1),
         "dakika": max(1, round(toplam / 1.4 / 60)),
+    }
+
+
+def _multi_floor_route(bas_kat, baslangic_ad, hedef_kat, hedef_ad, tercih="MERDIVEN"):
+    G = nx.Graph()
+    for kat, data in _KATLAR.items():
+        g = data["graph"]
+        for u, v, d in g.edges(data=True):
+            G.add_edge((kat, u), (kat, v), weight=d.get("weight", _mesafe(u, v)))
+        for rm_ad, pos in data["rooms"].items():
+            poi_pt = data["poi"].get(rm_ad)
+            if poi_pt:
+                G.add_edge((kat, rm_ad), (kat, poi_pt), weight=0.1)
+
+    katlar_list = list(_KATLAR.keys())
+    for i in range(len(katlar_list)):
+        for j in range(i + 1, len(katlar_list)):
+            k1, k2 = katlar_list[i], katlar_list[j]
+            ortak = set(_KATLAR[k1]["rooms"]) & set(_KATLAR[k2]["rooms"])
+            for gecis_ad in ortak:
+                if any(k in gecis_ad.upper() for k in GECIS_ANAHTARLARI):
+                    w = 3.0 if tercih in gecis_ad.upper() else 8.0
+                    G.add_edge((k1, gecis_ad), (k2, gecis_ad), weight=w)
+
+    try:
+        p = nx.shortest_path(G, (bas_kat, baslangic_ad), (hedef_kat, hedef_ad), weight="weight")
+    except Exception:
+        return None
+
+    seg_list = []
+    curr_kat = p[0][0]
+    curr_pts = []
+    for kat, node in p:
+        if kat != curr_kat:
+            seg_list.append((curr_kat, curr_pts))
+            curr_kat = kat
+            curr_pts = [node]
+        else:
+            curr_pts.append(node)
+    if curr_pts:
+        seg_list.append((curr_kat, curr_pts))
+
+    asamalar = []
+    toplam_mesafe = 0.0
+
+    for i in range(len(seg_list)):
+        kat, nodes = seg_list[i]
+        coord_nodes = [n for n in nodes if isinstance(n, tuple) and len(n) == 2 and isinstance(n[0], (int, float))]
+        
+        s_name = baslangic_ad if i == 0 else seg_list[i-1][1][-1]
+        t_name = hedef_ad if i == len(seg_list) - 1 else nodes[-1]
+
+        m = sum(_mesafe(coord_nodes[j], coord_nodes[j+1]) for j in range(len(coord_nodes)-1)) if len(coord_nodes) > 1 else 0.0
+        toplam_mesafe += m
+
+        yol_nok = []
+        if s_name in _KATLAR[kat]["rooms"]:
+            yol_nok.append(_KATLAR[kat]["rooms"][s_name])
+        yol_nok.extend(coord_nodes)
+        if t_name in _KATLAR[kat]["rooms"]:
+            yol_nok.append(_KATLAR[kat]["rooms"][t_name])
+
+        yon = _yonlendirme_olustur(yol_nok)
+
+        if i < len(seg_list) - 1:
+            next_kat = seg_list[i+1][0]
+            gecis_node = str(t_name)
+            u_gecis = gecis_node.upper()
+            if any(k in u_gecis for k in ["ASANSÖR", "ASANSOR"]):
+                gecis_tipi, gecis_tr, gecis_en, gecis_ar = "elevator", "Asansör", "elevator", "المصعد"
+            elif any(k in u_gecis for k in ["YÜRÜYEN", "YURUYEN", "ESCALATOR"]):
+                gecis_tipi, gecis_tr, gecis_en, gecis_ar = "escalator", "Yürüyen Merdiven", "escalator", "الدرج الكهربائي"
+            else:
+                gecis_tipi, gecis_tr, gecis_en, gecis_ar = "stairs", "Merdiven", "stairs", "الدرج"
+
+            if next_kat == "zemin":
+                h_tr, h_en, h_ar = "zemin kata", "ground floor", "الطابق الأرضي"
+            elif "-" in next_kat:
+                num = next_kat.replace("kat-", "")
+                h_tr, h_en, h_ar = f"Bodrum -{num} katına", f"Basement -{num} floor", f"طابق البدروم {num}-"
+            else:
+                num = next_kat.replace("kat", "")
+                h_tr, h_en, h_ar = f"{num}. kata", f"{num} floor", f"الطابق {num}"
+
+            yon[-1] = {
+                "icon": gecis_tipi,
+                "text_tr": f"{gecis_tr} ile {h_tr} git",
+                "text_en": f"Go to {h_en} using {gecis_en}",
+                "text_ar": f"اذهب إلى {h_ar} باستخدام {gecis_ar}",
+                "mesafe": 0
+            }
+
+        s_room = str(s_name) if str(s_name) in _KATLAR[kat]["rooms"] else list(_KATLAR[kat]["rooms"].keys())[0]
+        t_room = str(t_name) if str(t_name) in _KATLAR[kat]["rooms"] else list(_KATLAR[kat]["rooms"].keys())[0]
+
+        asamalar.append({
+            "kat": kat,
+            "hedef": str(t_name),
+            "mesafe": round(m, 1),
+            "svg": _svg_ciz(kat, coord_nodes, s_room, t_room, _kat_etiketi(kat)),
+            "yonlendirmeler": yon
+        })
+
+    return {
+        "tip": "cok_kat",
+        "gecis": str(seg_list[0][1][-1]),
+        "baslangic": baslangic_ad,
+        "asamalar": asamalar,
+        "mesafe": round(toplam_mesafe, 1),
+        "dakika": max(1, round(toplam_mesafe / 1.4 / 60)),
     }
 
 
