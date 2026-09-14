@@ -579,9 +579,9 @@ html, body {
 /* Floating Movement Mode Menu Popup */
 .float-mode-menu {
   position: absolute;
-  bottom: calc(100% + 10px);
-  left: 0;
-  background: rgba(14, 22, 38, 0.95);
+  top: 0;
+  right: calc(100% + 10px);
+  background: rgba(14, 22, 38, 0.96);
   backdrop-filter: blur(16px);
   border: 1.5px solid var(--card-border);
   border-radius: 16px;
@@ -1102,28 +1102,36 @@ html, body {
   <!-- Transition Overlay (Stairs / Elevator for Multi-floor) -->
   <div class="transition-overlay" id="transition-overlay" style="display:none"></div>
 
-  <!-- Floating Controls (Camera Tracking / Movement Mode / Restart Path / Full Map Toggle / Recenter) -->
-  <div class="map-controls" style="position: relative;">
-    <button class="map-ctrl-btn active" id="btn-cam-track" onclick="toggleCamTrack()" aria-label="Camera Tracking" title="تعقب الكاميرا لكامبي">🎥</button>
-    <button class="map-ctrl-btn" id="btn-mode-float" onclick="toggleModeFloatMenu(event)" aria-label="Movement Mode" title="وسيلة التنقل">
-      <span id="float-mode-icon">🪜</span>
-    </button>
-    <button class="map-ctrl-btn" onclick="restartRouteAnimation()" aria-label="Restart Path" title="إعادة تشغيل المسار">🔄</button>
-    <button class="map-ctrl-btn" id="btn-full-map" onclick="toggleFullMapView()" aria-label="Toggle Full Map" title="إظهار الخريطة كاملة / التكبير على المسار">🗺️</button>
-    <button class="map-ctrl-btn" onclick="recenterOnCampy()" aria-label="Recenter" title="إعادة التمركز على كامبي">🎯</button>
+  <!-- Floating Controls (Movement Mode / Camera Tracking / Restart Path / Full Map Toggle / Recenter) -->
+  <div class="map-controls">
+    <!-- First button at top: Movement Mode & Pop-up Menu -->
+    <div style="position: relative;">
+      <button class="map-ctrl-btn" id="btn-mode-float" onclick="toggleModeFloatMenu(event)" aria-label="Movement Mode" title="وسيلة التنقل">
+        <span id="float-mode-icon">🪜</span>
+      </button>
 
-    <!-- Floating Mode Selection Menu Popup -->
-    <div class="float-mode-menu" id="float-mode-menu" style="display: none;">
-      <div class="float-mode-item active" id="mode-stairs" onclick="setRouteMode('MERDIVEN')">
-        <span>🪜</span> <span id="lbl-mode-stairs">سلالم</span>
-      </div>
-      <div class="float-mode-item" id="mode-elevator" onclick="setRouteMode('ASANSOR')">
-        <span>🛗</span> <span id="lbl-mode-elevator">مصعد</span>
-      </div>
-      <div class="float-mode-item" id="mode-accessible" onclick="setRouteMode('ENGELSİZ')">
-        <span>♿</span> <span id="lbl-mode-accessible">ذوي الاحتياجات</span>
+      <!-- Floating Mode Selection Menu Popup (Aligned directly next to top button) -->
+      <div class="float-mode-menu" id="float-mode-menu" style="display: none;">
+        <div class="float-mode-item active" id="mode-stairs" onclick="setRouteMode('MERDIVEN')">
+          <span>🪜</span> <span id="lbl-mode-stairs">سلالم</span>
+        </div>
+        <div class="float-mode-item" id="mode-elevator" onclick="setRouteMode('ASANSOR')">
+          <span>🛗</span> <span id="lbl-mode-elevator">مصعد</span>
+        </div>
+        <div class="float-mode-item" id="mode-accessible" onclick="setRouteMode('ENGELSİZ')">
+          <span>♿</span> <span id="lbl-mode-accessible">ذوي الاحتياجات</span>
+        </div>
       </div>
     </div>
+
+    <!-- Second button: Camera Tracking -->
+    <button class="map-ctrl-btn active" id="btn-cam-track" onclick="toggleCamTrack()" aria-label="Camera Tracking" title="تعقب الكاميرا لكامبي">🎥</button>
+    <!-- Third button: Restart Path -->
+    <button class="map-ctrl-btn" onclick="restartRouteAnimation()" aria-label="Restart Path" title="إعادة تشغيل المسار">🔄</button>
+    <!-- Fourth button: Toggle Full Map -->
+    <button class="map-ctrl-btn" id="btn-full-map" onclick="toggleFullMapView()" aria-label="Toggle Full Map" title="إظهار الخريطة كاملة / التكبير على المسار">🗺️</button>
+    <!-- Fifth button: Recenter -->
+    <button class="map-ctrl-btn" onclick="recenterOnCampy()" aria-label="Recenter" title="إعادة التمركز على كامبي">🎯</button>
   </div>
 
   <!-- Bottom Navigation Drawer -->
