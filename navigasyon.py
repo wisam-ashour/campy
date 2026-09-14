@@ -386,7 +386,7 @@ def rota(hedef_ad, baslangic_ad="START_POINT", tercih="MERDIVEN"):
         }
 
     # --- farklı kat: akıllı çok aşamalı küresel rota ---
-    if hedef_kat == "kat-3" and bas_kat in ["zemin", "kat-1"]:
+    if _kat_degeri(hedef_kat) == -3 and _kat_degeri(bas_kat) >= -1:
         tercih = "YÜRÜYEN"
     return _multi_floor_route(bas_kat, baslangic_ad, hedef_kat, hedef_ad, tercih)
 
@@ -435,8 +435,8 @@ def _multi_floor_route(bas_kat, baslangic_ad, hedef_kat, hedef_ad, tercih="MERDI
                     base_w = 1.5 if is_esc else 2.5
                     G.add_edge((k1, gecis_ad), (k2, gecis_ad), weight=base_w * dist_floors)
 
-    # 0 أو -1 إلى -3 يجب استخدام الدرج الكهربائي بالكامل وإلغاء السلالم العادية بين الطوابق إلى kat-3
-    if (hedef_kat == "kat-3" and bas_kat in ["zemin", "kat-1"]) or (bas_kat == "kat-3" and hedef_kat in ["zemin", "kat-1"]):
+    # أي طالب في طابق أعلى من أو يساوي -1 يتجه إلى kat-3 يُمنع عنه السلالم العادية المتصلة بـ kat-3 ويُجبر على الدرج الكهربائي
+    if (_kat_degeri(bas_kat) >= -1 and _kat_degeri(hedef_kat) == -3) or (_kat_degeri(hedef_kat) >= -1 and _kat_degeri(bas_kat) == -3):
         for u, v in list(G.edges()):
             if u[0] != v[0] and ("kat-3" in [u[0], v[0]]) and not any(k in str(u[1]).upper() or k in str(v[1]).upper() for k in ["YÜRÜYEN", "YURUYEN", "ESCALATOR"]):
                 G.remove_edge(u, v)
