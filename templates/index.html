@@ -352,6 +352,45 @@ html, body {
   justify-content: center;
 }
 
+.chips-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+@media (max-width: 380px) {
+  .chips-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.quick-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid var(--card-border);
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  font-size: 13.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(10px);
+}
+
+.quick-card:hover, .quick-card:active {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
 .chip {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid var(--card-border);
@@ -1072,14 +1111,17 @@ const T = {
     lblDest: "القاعة / المكان الهدف",
     lblOrigin: "موقعك الحالي",
     destPlaceholder: "مثال: A120، B205، AZ05...",
-    quickLabel: "الأماكن الأكثر زيارة",
-    roomA120: "🏫 القاعة A120",
-    roomA108: "🏫 القاعة A108",
-    roomA101: "🏫 القاعة A101",
-    library: "📚 المكتبة",
+    quickLabel: "الوصول السريع للأماكن الهامة",
+    quickMescit: "🕌 المصلى والجامع",
+    quickKirtasiye: "✏️ القرطاسية والطباعة",
+    quickRevir: "🩺 العيادة الطبية والطوارئ",
+    quickIntStudent: "🎓 شؤون الطلاب الدوليين",
+    quickStudentAffairs: "🏛️ شؤون الطلاب العامة",
+    quickLibrary: "📚 المكتبة المركزية",
+    quickConference: "🎭 قاعة المؤتمرات والفعاليات",
+    quickSports: "⚽ الصالة الرياضية والملعب",
     mainEntrance: "🚪 المدخل الرئيسي",
     startPoint: "🚪 المدخل الرئيسي",
-    classrooms: "🏫 القاعات A120",
     btnNext: "التالي",
     btnStartNav: "ابدأ الملاحة",
     backLang: "← تغيير اللغة",
@@ -1114,14 +1156,17 @@ const T = {
     lblDest: "Hedef Sınıf / Mekan",
     lblOrigin: "Şu Anki Konumun",
     destPlaceholder: "Örn: A120, B205, AZ05...",
-    quickLabel: "Sık Kullanılan Mekanlar",
-    roomA120: "🏫 Derslik A120",
-    roomA108: "🏫 Derslik A108",
-    roomA101: "🏫 Derslik A101",
-    library: "📚 Kütüphane",
+    quickLabel: "Hızlı Erişim & Önemli Mekanlar",
+    quickMescit: "🕌 Mescit & Cami",
+    quickKirtasiye: "✏️ Kırtasiye & Baskı Merkezi",
+    quickRevir: "🩺 Revir & Acil Müdahale",
+    quickIntStudent: "🎓 Uluslararası Öğrenci İşleri",
+    quickStudentAffairs: "🏛️ Öğrenci İşleri Genel",
+    quickLibrary: "📚 Merkez Kütüphane",
+    quickConference: "🎭 Konferans & Etkinlik Salonu",
+    quickSports: "⚽ Spor Salonu & Saha",
     mainEntrance: "Ana Giriş",
     startPoint: "Ana Giriş",
-    classrooms: "Derslik A120",
     btnNext: "İleri",
     btnStartNav: "Navigasyonu Başlat",
     backLang: "← Dil Seçimi",
@@ -1156,14 +1201,17 @@ const T = {
     lblDest: "Destination Room / Spot",
     lblOrigin: "Your Current Location",
     destPlaceholder: "e.g. A120, B205, AZ05...",
-    quickLabel: "Popular Spots",
-    roomA120: "🏫 Room A120",
-    roomA108: "🏫 Room A108",
-    roomA101: "🏫 Room A101",
-    library: "📚 Library",
+    quickLabel: "Quick Access & Key Locations",
+    quickMescit: "🕌 Prayer Room & Mosque",
+    quickKirtasiye: "✏️ Stationery & Print Center",
+    quickRevir: "🩺 Medical Clinic & Emergency",
+    quickIntStudent: "🎓 International Student Affairs",
+    quickStudentAffairs: "🏛️ General Student Affairs",
+    quickLibrary: "📚 Central Library",
+    quickConference: "🎭 Conference & Events Hall",
+    quickSports: "⚽ Sports Hall & Gym",
     mainEntrance: "Main Entrance",
     startPoint: "Main Entrance",
-    classrooms: "Classroom A120",
     btnNext: "Next",
     btnStartNav: "Start Navigation",
     backLang: "← Language",
@@ -1254,14 +1302,19 @@ function applyLangToUI() {
   const btnEdit = document.getElementById('btn-edit');
   if (btnEdit) btnEdit.textContent = t.reStart;
 
-  // Destination Quick Chips: Classroom codes and Library
+  // Destination Quick Cards
   const destChips = document.getElementById('dest-chips');
   if (destChips) {
+    destChips.className = 'chips-grid';
     destChips.innerHTML = `
-      <div class="chip" onclick="quickDest('A120')">${t.roomA120}</div>
-      <div class="chip" onclick="quickDest('A108')">${t.roomA108}</div>
-      <div class="chip" onclick="quickDest('A101')">${t.roomA101}</div>
-      <div class="chip" onclick="quickDest('KÜTÜPHANE Z1')">${t.library}</div>
+      <div class="quick-card" onclick="quickDest('MESCIT')">${t.quickMescit}</div>
+      <div class="quick-card" onclick="quickDest('KIRTASIYE')">${t.quickKirtasiye}</div>
+      <div class="quick-card" onclick="quickDest('REVİR')">${t.quickRevir}</div>
+      <div class="quick-card" onclick="quickDest('ULUSLARARASI')">${t.quickIntStudent}</div>
+      <div class="quick-card" onclick="quickDest('ÖĞRENCİ İŞLERİ')">${t.quickStudentAffairs}</div>
+      <div class="quick-card" onclick="quickDest('KÜTÜPHANE')">${t.quickLibrary}</div>
+      <div class="quick-card" onclick="quickDest('KONFERANS')">${t.quickConference}</div>
+      <div class="quick-card" onclick="quickDest('SPOR SALON')">${t.quickSports}</div>
     `;
   }
 
@@ -1295,8 +1348,15 @@ function resetToHome() {
   document.getElementById('s-lang').classList.add('hide');
 }
 
-function quickDest(v) {
-  document.getElementById('inp-dest').value = v;
+function quickDest(kw) {
+  let target = kw;
+  if (MEKANLAR && MEKANLAR.length > 0) {
+    const match = MEKANLAR.find(m => m.name.toUpperCase().includes(kw.toUpperCase()));
+    if (match) {
+      target = match.name;
+    }
+  }
+  document.getElementById('inp-dest').value = target;
   goToOrigin();
 }
 
