@@ -2406,9 +2406,10 @@ function handleSvgElementTap(x, y) {
 
 // ════════════════ MAP & FLOOR RENDERER ════════════════
 function showFloorMap(idx) {
-  if (!routeData) return;
+  if (!routeData || !routeData.asamalar || !routeData.asamalar[idx]) return;
   currentFloorIdx = idx;
   const container = document.getElementById('map-container');
+  if (!container) return;
   const stage = routeData.asamalar[idx];
 
   // Clear previous SVG
@@ -2420,51 +2421,50 @@ function showFloorMap(idx) {
   const tmp = document.createElement('div');
   tmp.innerHTML = stage.svg;
   const svg = tmp.querySelector('svg');
+  if (!svg) return;
+
   svg.id = 'route-svg';
   svg.style.cssText = 'width:100%; height:100%; position:absolute; inset:0;';
 
-  // Custom dark styling on SVG elements
-  svg.querySelectorAll('rect').forEach(r => r.setAttribute('fill', '#090d16'));
-  svg.querySelectorAll('path').forEach(p => {
-    if (p.classList.contains('campy-route-path')) {
-      p.setAttribute('stroke', '#10b981');
-      p.setAttribute('stroke-width', '5');
-      p.style.filter = 'drop-shadow(0 0 8px rgba(16,185,129,0.7))';
-    } else {
-      p.setAttribute('stroke', '#26334d');
-      p.setAttribute('stroke-width', '1.5');
-    }
-  });
+  // Apply subtle glow to green route line without modifying architectural wall strokes
+  const routePath = svg.querySelector('.campy-route-path');
+  if (routePath) {
+    routePath.style.filter = 'drop-shadow(0 0 8px rgba(16,185,129,0.8))';
+  }
 
   container.insertBefore(svg, container.firstChild);
-  setupNativeTouchGestures(svg);
-  startMover(svg);
 
-  // Pan Zoom Init
+  try {
+    setupNativeTouchGestures(svg);
+    startMover(svg);
+  } catch (err) {
+    console.warn("Mover setup warning:", err);
+  }
+
+  // Pan Zoom Init with fallback safety
   setTimeout(() => {
-    pzInstance = svgPanZoom('#route-svg', {
-      zoomEnabled: true,
-      controlIconsEnabled: false,
-      fit: true,
-      center: true,
-      minZoom: 0.4,
-      maxZoom: 8
-    });
-    // Default: Zoom in close to Campy and path for immersive camera follow
-    if (!isFullMapView) {
-      pzInstance.zoomAtPoint(2.5, { x: container.clientWidth / 2, y: container.clientHeight / 2 });
+    try {
+      if (typeof svgPanZoom !== 'undefined') {
+        pzInstance = svgPanZoom('#route-svg', {
+          zoomEnabled: true,
+          controlIconsEnabled: false,
+          fit: true,
+          center: true,
+          minZoom: 0.4,
+          maxZoom: 8
+        });
+        if (!isFullMapView && pzInstance) {
+          pzInstance.zoomAtPoint(2.2, { x: container.clientWidth / 2, y: container.clientHeight / 2 });
+        }
+      }
+    } catch (err) {
+      console.warn("svgPanZoom warning:", err);
     }
   }, 150);
 
   // Floor Pill Badges
   const badgeContainer = document.getElementById('floor-badge');
-  const currentStageKat = stage ? stage.kat : 'zemin';
-  const currentFloorLabel = getFloorLabel(currentStageKat);
-  
-  const floorTxtEl = document.getElementById('building-floor-txt');
-  if (floorTxtEl) floorTxtEl.textContent = currentFloorLabel;
-
-  if (routeData && routeData.asamalar && routeData.asamalar.length >= 1) {
+  if (badgeContainer && routeData && routeData.asamalar && routeData.asamalar.length >= 1) {
     badgeContainer.style.display = 'flex';
     badgeContainer.innerHTML = routeData.asamalar.map((s, i) => {
       const lbl = getFloorLabel(s.kat);
