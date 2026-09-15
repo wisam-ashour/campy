@@ -1427,8 +1427,67 @@ const T = {
     whereTo: "Where do you want to go?",
     destIntro: "Type room code or select popular destination",
     whereFrom: "Where are you right now?",
-    originIntro: "Select current location or use main entrance",
-    lblDe// ════════════════ LANGUAGE LOGIC ════════════════
+    lblDest: "Target Room / Location",
+    lblOrigin: "Current Location",
+    destPlaceholder: "e.g. A120, B205, AZ05...",
+    quickLabel: "Quick Access & Key Locations",
+    quickMescit: "🕌 Prayer Room",
+    quickKirtasiye: "✏️ Stationery & Print Center",
+    quickRevir: "🩺 Infirmary & First Aid",
+    quickIntStudent: "🎓 International Students Office",
+    quickStudentAffairs: "🏛️ Student Affairs",
+    quickLibrary: "📚 Central Library",
+    quickConference: "🎭 Conference Hall",
+    quickSports: "⚽ Sports Center",
+    mainEntrance: "Main Entrance",
+    startPoint: "Main Entrance",
+    btnNext: "Next",
+    btnStartNav: "Start Navigation",
+    backLang: "← Language",
+    backDest: "← Destination",
+    distance: "Distance",
+    time: "Time",
+    goToFloor: "Go to floor:",
+    viaStairs: "Via Stairs 🪜",
+    viaElevator: "Via Elevator 🛗",
+    viaEscalator: "Via Escalator ⚡",
+    floor0: "Ground Floor",
+    floor1: "Floor 1",
+    floor2: "Floor 2",
+    floor3: "Floor 3",
+    floorNeg1: "Floor -1",
+    floorNeg2: "Floor -2",
+    floorNeg3: "Floor -3",
+    reStart: "Recalculate",
+    calculating: "Calculating fastest route...",
+    errorNoRoute: "Location not found or no route available.",
+    drawerQuickText: "⚙️ Change Route / Settings",
+    home: "Home",
+    arrived: "You have arrived! 🎉",
+    placeholderEditDest: "Change Target (e.g. A120, B205...)",
+    placeholderEditOrigin: "Change Origin (e.g. Main Entrance...)",
+    btnBackDestPage: "← Select New Target",
+    modeStairs: "Stairs",
+    modeElevator: "Elevator",
+    modeAccessible: "Accessible",
+    welcomeTitle: "Welcome! I am Campy 🤖",
+    welcomeSpeech: "I'm your smart campus assistant! Would you like a quick tour to learn how to use the app?",
+    btnStartTour: "Start Tour 🚀",
+    btnSkipTour: "Skip ⏩",
+    tourGuideTag: "🤖 Campy Guided Tour",
+    tourStep1Msg: "👉 Try the tour by selecting '🎭 Conference Hall' or any location",
+    tourStep2Msg: "👉 Tap '🚪 Main Entrance' as your starting point",
+    tourStep3_1: "🪜/🛗/♿ Select route preference here: Stairs, Elevator, or Accessible mode.",
+    tourStep3_2: "🎥 Toggle automatic camera tracking of Campy.",
+    tourStep3_3: "🔄 Restart Campy's movement on this floor.",
+    tourStep3_4: "🏢 Switch between campus building floors.",
+    tourStep3_5: "🎉 Awesome! You are ready to navigate with Campy.",
+    btnTourNext: "Next ➔",
+    btnTourFinish: "Finish Tour & Start 🚀"
+  }
+};
+
+// ════════════════ LANGUAGE LOGIC ════════════════
 function pickLang(l) {
   lang = l;
   document.documentElement.lang = l;
@@ -1524,6 +1583,30 @@ function applyLangToUI() {
   if (editDest) editDest.placeholder = t.placeholderEditDest;
   const editOrigin = document.getElementById('edit-origin');
   if (editOrigin) editOrigin.placeholder = t.placeholderEditOrigin;
+
+  // Destination Quick Cards
+  const destChips = document.getElementById('dest-chips');
+  if (destChips) {
+    destChips.className = 'chips-grid';
+    destChips.innerHTML = `
+      <div class="quick-card" onclick="quickDest('BAY MESCIT')">${t.quickMescit}</div>
+      <div class="quick-card" onclick="quickDest('KIRTASIYE')">${t.quickKirtasiye}</div>
+      <div class="quick-card" onclick="quickDest('REVIR')">${t.quickRevir}</div>
+      <div class="quick-card" onclick="quickDest('ULUSLARARASI OFİS')">${t.quickIntStudent}</div>
+      <div class="quick-card" onclick="quickDest('ÖĞRENCİ İŞLERİ')">${t.quickStudentAffairs}</div>
+      <div class="quick-card" onclick="quickDest('KÜTÜPHANE Z1')">${t.quickLibrary}</div>
+      <div class="quick-card" onclick="quickDest('KONFERANS SALONU')">${t.quickConference}</div>
+      <div class="quick-card" onclick="quickDest('SPOR SALON')">${t.quickSports}</div>
+    `;
+  }
+
+  // Origin Quick Chips
+  const originChips = document.getElementById('origin-chips');
+  if (originChips) {
+    originChips.innerHTML = `
+      <div class="chip" onclick="quickOrigin('START_POINT')">${t.startPoint}</div>
+    `;
+  }
 }
 
 // ════════════════ INTERACTIVE GUIDED TOUR ENGINE ════════════════
@@ -1654,31 +1737,6 @@ function endGuidedTour() {
   hideMapTourModal();
   highlightElement(null);
   resetToHome();
-}
-
-  // Destination Quick Cards
-  const destChips = document.getElementById('dest-chips');
-  if (destChips) {
-    destChips.className = 'chips-grid';
-    destChips.innerHTML = `
-      <div class="quick-card" onclick="quickDest('BAY MESCIT')">${t.quickMescit}</div>
-      <div class="quick-card" onclick="quickDest('KIRTASIYE')">${t.quickKirtasiye}</div>
-      <div class="quick-card" onclick="quickDest('REVIR')">${t.quickRevir}</div>
-      <div class="quick-card" onclick="quickDest('ULUSLARARASI OFİS')">${t.quickIntStudent}</div>
-      <div class="quick-card" onclick="quickDest('ÖĞRENCİ İŞLERİ')">${t.quickStudentAffairs}</div>
-      <div class="quick-card" onclick="quickDest('KÜTÜPHANE Z1')">${t.quickLibrary}</div>
-      <div class="quick-card" onclick="quickDest('KONFERANS SALONU')">${t.quickConference}</div>
-      <div class="quick-card" onclick="quickDest('SPOR SALON')">${t.quickSports}</div>
-    `;
-  }
-
-  // Origin Quick Chips
-  const originChips = document.getElementById('origin-chips');
-  if (originChips) {
-    originChips.innerHTML = `
-      <div class="chip" onclick="quickOrigin('START_POINT')">${t.startPoint}</div>
-    `;
-  }
 }
 
 // ════════════════ SCREEN TRANSITIONS & WIZARD ════════════════
