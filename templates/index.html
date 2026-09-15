@@ -1843,7 +1843,7 @@ function endGuidedTour() {
   hideMapTourModal();
   clearTourFocus();
   highlightElement(null);
-  resetToHome();
+  showToast((lang === 'ar') ? "🚀 بدأت الملاحة الحية إلى قاعة A120!" : (lang === 'tr') ? "🚀 A120 dersliğine canlı navigasyon başladı!" : "🚀 Live navigation to Room A120 started!");
 }
 
 // ════════════════ SCREEN TRANSITIONS & WIZARD ════════════════
@@ -2716,22 +2716,31 @@ function startMover(svg) {
 
   function step(ts) {
     if (!robotG.isConnected) return;
-    if (isTourActive) {
-      start = ts;
-      requestAnimationFrame(step);
-      return;
-    }
     if (start === null) start = ts;
 
-    const elapsed = ts - start;
+    let targetMaxProgress = 1.0;
+    if (isTourActive) {
+      if (tourSubStep === 1) targetMaxProgress = 0.25;
+      else if (tourSubStep === 2) targetMaxProgress = 0.55;
+      else if (tourSubStep === 3) targetMaxProgress = 0.80;
+      else if (tourSubStep >= 4) targetMaxProgress = 1.00;
+    }
+
+    let elapsed = ts - start;
+    let progress = elapsed / walkDuration;
+
+    if (isTourActive && progress >= targetMaxProgress) {
+      progress = targetMaxProgress;
+      start = ts - (targetMaxProgress * walkDuration);
+    }
+
     const bubble = robotG.querySelector('#campy-map-bubble');
     const bubbleTxt = robotG.querySelector('#campy-bubble-txt');
     const innerG = robotG.querySelector('#campy-inner-scale');
     const visorG = robotG.querySelector('#campy-visor-g');
 
-    if (elapsed < walkDuration) {
+    if (progress < 1.0) {
       // Walking along the path towards stairs / target
-      const progress = elapsed / walkDuration;
       const pt = path.getPointAtLength(progress * len);
       robotG.setAttribute('transform', `translate(${pt.x.toFixed(1)}, ${pt.y.toFixed(1)})`);
       if (bubble) bubble.style.display = 'none';
@@ -2795,6 +2804,10 @@ function startMover(svg) {
             showDynamicCampyBubble(bubble, bubbleTxt, `${t.arrived}: ${finalDestName}! 🎉`);
           }
         }
+      }
+
+      if (isTourActive) {
+        requestAnimationFrame(step);
       }
     }
   }
