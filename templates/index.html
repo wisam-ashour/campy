@@ -893,6 +893,29 @@ html, body {
   letter-spacing: 0.2px;
   font-family: system-ui, var(--font-main);
 }
+
+/* Guided Tour Focus Spotlight & Dimming */
+.tour-step-dimmed {
+  opacity: 0.25 !important;
+  pointer-events: none !important;
+  filter: grayscale(80%) !important;
+  transition: opacity 0.3s ease, filter 0.3s ease;
+}
+.tour-card-spotlight {
+  position: relative !important;
+  z-index: 9999 !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  filter: none !important;
+  border: 2px solid var(--accent-cyan) !important;
+  box-shadow: 0 0 0 3px var(--accent-cyan), 0 0 25px rgba(6, 182, 212, 0.8) !important;
+  animation: pulseSpotlight 1.5s infinite ease-in-out !important;
+}
+@keyframes pulseSpotlight {
+  0% { box-shadow: 0 0 0 3px var(--accent-cyan), 0 0 15px rgba(6, 182, 212, 0.6); transform: scale(1); }
+  50% { box-shadow: 0 0 0 5px #38bdf8, 0 0 30px rgba(56, 189, 248, 0.9); transform: scale(1.02); }
+  100% { box-shadow: 0 0 0 3px var(--accent-cyan), 0 0 15px rgba(6, 182, 212, 0.6); transform: scale(1); }
+}
 </style>
 </head>
 <body>
@@ -1289,6 +1312,20 @@ html, body {
 </div>
 
 <script>
+let lang = 'ar';
+let MEKANLAR = [];
+
+async function loadMekanlar() {
+  try {
+    const res = await fetch('/api/mekanlar');
+    const d = await res.json();
+    if (d && d.mekanlar) MEKANLAR = d.mekanlar;
+  } catch (e) {
+    console.error("Mekanlar yuklenemedi:", e);
+  }
+}
+document.addEventListener('DOMContentLoaded', loadMekanlar);
+
 // ════════════════ TRANSLATIONS (I18N) ════════════════
 const T = {
   ar: {
@@ -1310,10 +1347,10 @@ const T = {
     quickLibrary: "📚 المكتبة المركزية",
     quickConference: "🎭 قاعة المؤتمرات والفعاليات",
     quickSports: "⚽ الصالة الرياضية والملعب",
-    mainEntrance: "🚪 المدخل الرئيسي",
-    startPoint: "🚪 المدخل الرئيسي",
+    mainEntrance: "المدخل الرئيسي",
+    startPoint: "المدخل الرئيسي",
     btnNext: "التالي",
-    btnStartNav: "ابدأ الملاحة",
+    btnStartNav: "بدء التوجيه والمسار",
     backLang: "← تغيير اللغة",
     backDest: "← اختيار الوجهة",
     distance: "المسافة",
@@ -1411,8 +1448,8 @@ const T = {
     btnStartTour: "Turu Başlat 🚀",
     btnSkipTour: "Atla ⏩",
     tourGuideTag: "🤖 Campy Rehber Turu",
-    tourStep1Msg: "👉 Turu denemek için '🎭 Konferans Salonu' veya herhangi bir mekan seçin",
-    tourStep2Msg: "👉 Başlangıç noktanız olarak '🚪 Ana Giriş' seçeneğine dokunun",
+    tourStep1Msg: "👉 Hızlı erişim için '🎭 Konferans ve Etkinlik Salonu' seçeneğine tıklayın",
+    tourStep2Msg: "👉 Başlangıç için '🚪 Ana Giriş' seçeneğine tıklayın",
     tourStep3_1: "🪜/🛗/♿ Buradan ulaşım türünü seçin: Merdiven, Asansör veya Engelsiz mod.",
     tourStep3_2: "🎥 Bu buton haritanın Campy'yi otomatik takip etmesini açar/kapatır.",
     tourStep3_3: "🔄 Bu buton Campy'nin hareketini bu kattan yeniden başlatır.",
@@ -1475,8 +1512,8 @@ const T = {
     btnStartTour: "Start Tour 🚀",
     btnSkipTour: "Skip ⏩",
     tourGuideTag: "🤖 Campy Guided Tour",
-    tourStep1Msg: "👉 Try the tour by selecting '🎭 Conference Hall' or any location",
-    tourStep2Msg: "👉 Tap '🚪 Main Entrance' as your starting point",
+    tourStep1Msg: "👉 Tap '🎭 Conference & Event Hall' for quick access",
+    tourStep2Msg: "👉 Tap '🚪 Main Entrance' to start your route",
     tourStep3_1: "🪜/🛗/♿ Select route preference here: Stairs, Elevator, or Accessible mode.",
     tourStep3_2: "🎥 Toggle automatic camera tracking of Campy.",
     tourStep3_3: "🔄 Restart Campy's movement on this floor.",
@@ -1595,7 +1632,7 @@ function applyLangToUI() {
       <div class="quick-card" onclick="quickDest('ULUSLARARASI OFİS')">${t.quickIntStudent}</div>
       <div class="quick-card" onclick="quickDest('ÖĞRENCİ İŞLERİ')">${t.quickStudentAffairs}</div>
       <div class="quick-card" onclick="quickDest('KÜTÜPHANE Z1')">${t.quickLibrary}</div>
-      <div class="quick-card" onclick="quickDest('KONFERANS SALONU')">${t.quickConference}</div>
+      <div class="quick-card" id="card-dest-conference" onclick="quickDest('KONFERANS SALONU')">${t.quickConference}</div>
       <div class="quick-card" onclick="quickDest('SPOR SALON')">${t.quickSports}</div>
     `;
   }
@@ -1604,7 +1641,7 @@ function applyLangToUI() {
   const originChips = document.getElementById('origin-chips');
   if (originChips) {
     originChips.innerHTML = `
-      <div class="chip" onclick="quickOrigin('START_POINT')">${t.startPoint}</div>
+      <div class="chip" id="card-origin-main" onclick="quickOrigin('START_POINT')">${t.startPoint}</div>
     `;
   }
 }
@@ -1621,13 +1658,64 @@ function startGuidedTour() {
   applyLangToUI();
   goScreen('s-welcome', 's-dest');
   showTourBanner(T[lang].tourStep1Msg);
+  setTimeout(() => setTourStepFocus(1), 50);
 }
 
 function skipTour() {
   isTourActive = false;
   tourStep = 0;
   hideTourBanner();
+  clearTourFocus();
   goScreen('s-welcome', 's-dest');
+}
+
+function setTourStepFocus(step) {
+  clearTourFocus();
+  if (!isTourActive) return;
+
+  if (step === 1) {
+    const destScreen = document.getElementById('s-dest');
+    if (!destScreen) return;
+
+    const confCard = document.getElementById('card-dest-conference');
+    if (confCard) {
+      confCard.classList.add('tour-card-spotlight');
+    }
+
+    const allCards = destScreen.querySelectorAll('.quick-card');
+    allCards.forEach(card => {
+      if (card !== confCard) {
+        card.classList.add('tour-step-dimmed');
+      }
+    });
+
+    const otherElements = destScreen.querySelectorAll('.wizard-input-wrap, #btn-next, .back-btn');
+    otherElements.forEach(el => el.classList.add('tour-step-dimmed'));
+
+  } else if (step === 2) {
+    const originScreen = document.getElementById('s-origin');
+    if (!originScreen) return;
+
+    const mainCard = document.getElementById('card-origin-main');
+    if (mainCard) {
+      mainCard.classList.add('tour-card-spotlight');
+    }
+
+    const otherChips = originScreen.querySelectorAll('.chip');
+    otherChips.forEach(card => {
+      if (card !== mainCard) {
+        card.classList.add('tour-step-dimmed');
+      }
+    });
+
+    const otherElements = originScreen.querySelectorAll('.wizard-input-wrap, #btn-start, .back-btn');
+    otherElements.forEach(el => el.classList.add('tour-step-dimmed'));
+  }
+}
+
+function clearTourFocus() {
+  document.querySelectorAll('.tour-card-spotlight').forEach(el => el.classList.remove('tour-card-spotlight'));
+  document.querySelectorAll('.tour-step-dimmed').forEach(el => el.classList.remove('tour-step-dimmed'));
 }
 
 function showTourBanner(msg) {
@@ -1735,6 +1823,7 @@ function endGuidedTour() {
   tourSubStep = 1;
   hideTourBanner();
   hideMapTourModal();
+  clearTourFocus();
   highlightElement(null);
   resetToHome();
 }
@@ -1753,6 +1842,9 @@ function goToOrigin() {
   if (isTourActive) {
     tourStep = 2;
     showTourBanner(T[lang].tourStep2Msg);
+    setTimeout(() => setTourStepFocus(2), 50);
+  } else {
+    clearTourFocus();
   }
   goScreen('s-dest', 's-origin');
 }
@@ -1760,6 +1852,7 @@ function goToOrigin() {
 function resetToHome() {
   hideTourBanner();
   hideMapTourModal();
+  clearTourFocus();
   highlightElement(null);
   document.getElementById('s-map').classList.remove('active');
   document.getElementById('s-origin').classList.add('hide');
