@@ -13,20 +13,24 @@ from flask import Flask, render_template, request, jsonify
 
 import navigasyon as nav
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE_DIR, "data")
+KAYIT_DIR = os.path.join(BASE_DIR, "kayit")
+KAYIT_DOSYA = os.path.join(KAYIT_DIR, "kullanim.csv")
+
 # --- katları yükle (bir kez, başlangıçta) ---
-print("Kampüs planlari yukleniyor...")
-if os.path.exists("data"):
-    for fname in sorted(os.listdir("data")):
+print(f"Kampüs planlari yukleniyor... ({DATA_DIR})")
+if os.path.exists(DATA_DIR):
+    for fname in sorted(os.listdir(DATA_DIR)):
         if fname.endswith(".dxf"):
             kat_key = fname[:-4]
-            r = nav.kat_yukle(kat_key, os.path.join("data", fname))
+            r = nav.kat_yukle(kat_key, os.path.join(DATA_DIR, fname))
             print(f"Kat '{kat_key}': {r[0]} mekan | {r[1]} dugum")
 print(f"Toplam: {len(nav.tum_mekanlar())} mekan")
 
 app = Flask(__name__)
 
-KAYIT_DOSYA = "kayit/kullanim.csv"
-os.makedirs("kayit", exist_ok=True)
+os.makedirs(KAYIT_DIR, exist_ok=True)
 if not os.path.exists(KAYIT_DOSYA):
     with open(KAYIT_DOSYA, "w", newline="", encoding="utf-8") as f:
         csv.writer(f).writerow(["zaman", "baslangic", "hedef", "sonuc"])
