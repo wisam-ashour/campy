@@ -189,8 +189,20 @@ def kat_yukle(kat_adi, dxf_yolu):
     return len(rooms), graf.number_of_nodes()
 
 
+def _otomatik_yukle_if_empty():
+    if not _KATLAR:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        data_dir = os.path.join(base_dir, "data")
+        if os.path.exists(data_dir):
+            for fname in sorted(os.listdir(data_dir)):
+                if fname.endswith(".dxf"):
+                    kat_key = fname[:-4]
+                    kat_yukle(kat_key, os.path.join(data_dir, fname))
+
+
 def tum_mekanlar():
     """Tüm katlardaki mekân isimleri (tekrarsız, sıralı)."""
+    _otomatik_yukle_if_empty()
     hepsi = set()
     for k in _KATLAR.values():
         hepsi.update(k["rooms"].keys())
@@ -209,6 +221,7 @@ def _norm_mekan_ad(s):
 
 def _gercek_mekan_ad(ad):
     """Mekân adını katlardaki tam DWG ismiyle eşleştirir (esnek Türkçe/İngilizce harف duyarlılığı)."""
+    _otomatik_yukle_if_empty()
     if not ad:
         return ad
     for kat, veri in _KATLAR.items():
@@ -500,6 +513,7 @@ def _en_yakin_wc(baslangic_ad, wc_type):
 def rota(hedef_ad, baslangic_ad="START_POINT", tercih="MERDIVEN"):
     """Herhangi bir mekândan herhangi bir mekâna rota.
     Aynı kattaysa tek harita, farklı kattaysa merdiven/asansör üzerinden iki aşama."""
+    _otomatik_yukle_if_empty()
     baslangic_ad = _gercek_mekan_ad(baslangic_ad)
 
     # Generic WC request handling: find closest WC to student's current floor/location
