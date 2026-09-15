@@ -1315,6 +1315,12 @@ html, body {
 <script>
 let lang = 'ar';
 let MEKANLAR = [];
+let pzInstance = null;
+let routeData = null;
+let currentFloorIdx = 0;
+let initialPinchDist = null;
+let initialPinchZoom = null;
+let moverAnimationId = null;
 
 async function loadMekanlar() {
   try {
