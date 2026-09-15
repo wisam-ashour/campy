@@ -1265,7 +1265,7 @@ html, body {
     <!-- Second button: Camera Tracking -->
     <button class="map-ctrl-btn active" id="btn-cam-track" onclick="toggleCamTrack()" aria-label="Camera Tracking" title="تعقب الكاميرا لكامبي">🎥</button>
     <!-- Third button: Restart Path -->
-    <button class="map-ctrl-btn" onclick="restartRouteAnimation()" aria-label="Restart Path" title="إعادة تشغيل المسار">🔄</button>
+    <button class="map-ctrl-btn" id="btn-restart-path" onclick="restartRouteAnimation()" aria-label="Restart Path" title="إعادة تشغيل المسار">🔄</button>
     <!-- Fourth button: Toggle Full Map -->
     <button class="map-ctrl-btn" id="btn-full-map" onclick="toggleFullMapView()" aria-label="Toggle Full Map" title="إظهار الخريطة كاملة / التكبير على المسار">🗺️</button>
     <!-- Fifth button: Recenter -->
@@ -1354,6 +1354,7 @@ const T = {
     quickLibrary: "📚 المكتبة المركزية",
     quickConference: "🎭 قاعة المؤتمرات والفعاليات",
     quickSports: "⚽ الصالة الرياضية والملعب",
+    quickA120: "🏫 قاعة A120",
     mainEntrance: "المدخل الرئيسي",
     startPoint: "المدخل الرئيسي",
     btnNext: "التالي",
@@ -1390,13 +1391,13 @@ const T = {
     btnStartTour: "بدء الجولة 🚀",
     btnSkipTour: "تخطي ⏩",
     tourGuideTag: "🤖 جولة كامبي التعليمية",
-    tourStep1Msg: "👉 اضغط على '🎭 قاعة المؤتمرات والفعاليات'",
+    tourStep1Msg: "👉 اضغط على '🏫 قاعة A120'",
     tourStep2Msg: "👉 اضغط على '🚪 المدخل الرئيسي'",
-    tourStep3_1: "🪜/🛗/♿ من هذا الزر يمكنك اختيار طريقة التنقل: السلالم، المصعد، أو مسارات ذوي الاحتياجات.",
-    tourStep3_2: "🎥 هذا الزر يفعل أو يوقف تعقب الكاميرا التلقائي لحركتي أثناء الملاحة.",
-    tourStep3_3: "🔄 هذا الزر يعيد تشغيل حركتي من بداية الطريق على هذا الطابق.",
-    tourStep3_4: "🏢 من هنا يمكنك التبديل بين طوابق المبنى لمعاينة المسار في كل طابق.",
-    tourStep3_5: "🎉 رائع جداً! أنت الآن محترف وجاهز لاستخدام كامبي بكل سهولة.",
+    tourStep3_1: "🪜/🛗/♿ اضغط هنا لاختيار وسيلة التنقل: السلالم، المصعد، أو مسار ذوي الاحتياجات.",
+    tourStep3_2: "🎥 اضغط هنا لتفعيل أو إيقاف تعقب الكاميرا التلقائي لحركة كامبي.",
+    tourStep3_3: "🔄 اضغط هنا لإعادة تشغيل حركة كامبي من بداية هذا الطابق.",
+    tourStep3_4: "🏢 اضغط هنا للتبديل بين الطوابق لمتابعة صعود كامبي عبر السلالم والمصاعد.",
+    tourStep3_5: "🎉 رائع جداً! أصبحت الآن خبيراً بالكامل وجاهزاً لاستخدام كامبي بكل سهولة.",
     btnTourNext: "التالي ➔",
     btnTourFinish: "إنهاء الجولة وبدء الاستخدام 🚀"
   },
@@ -1419,6 +1420,7 @@ const T = {
     quickLibrary: "📚 Merkez Kütüphane",
     quickConference: "🎭 Konferans & Etkinlik Salonu",
     quickSports: "⚽ Spor Salonu & Saha",
+    quickA120: "🏫 A120 Dersliği",
     mainEntrance: "Ana Giriş",
     startPoint: "Ana Giriş",
     btnNext: "İleri",
@@ -1455,12 +1457,12 @@ const T = {
     btnStartTour: "Turu Başlat 🚀",
     btnSkipTour: "Atla ⏩",
     tourGuideTag: "🤖 Campy Rehber Turu",
-    tourStep1Msg: "👉 Hızlı erişim için '🎭 Konferans ve Etkinlik Salonu' seçeneğine tıklayın",
-    tourStep2Msg: "👉 Başlangıç için '🚪 Ana Giriş' seçeneğine tıklayın",
-    tourStep3_1: "🪜/🛗/♿ Buradan ulaşım türünü seçin: Merdiven, Asansör veya Engelsiz mod.",
-    tourStep3_2: "🎥 Bu buton haritanın Campy'yi otomatik takip etmesini açar/kapatır.",
-    tourStep3_3: "🔄 Bu buton Campy'nin hareketini bu kattan yeniden başlatır.",
-    tourStep3_4: "🏢 Buradan binanın katları arasında geçiş yapabilirsiniz.",
+    tourStep1Msg: "👉 '🏫 A120 Dersliği' butonuna tıklayın",
+    tourStep2Msg: "👉 '🚪 Ana Giriş' butonuna tıklayın",
+    tourStep3_1: "🪜/🛗/♿ Merdiven, Asansör ve Engelsiz mod arasında seçim yapmak için tıklayın.",
+    tourStep3_2: "🎥 Campy'nin otomatik kamera takibini açıp kapatmak için tıklayın.",
+    tourStep3_3: "🔄 Campy'nin bu kattaki hareketini baştan başlatmak için tıklayın.",
+    tourStep3_4: "🏢 Katlar arasında geçiş yaparak Campy'nin merdiven/asansör geçişlerini izleyin.",
     tourStep3_5: "🎉 Harika! Artık Campy'yi kullanmaya tamamen hazırsınız.",
     btnTourNext: "İleri ➔",
     btnTourFinish: "Turu Bitir ve Başla 🚀"
@@ -1483,6 +1485,7 @@ const T = {
     quickLibrary: "📚 Central Library",
     quickConference: "🎭 Conference Hall",
     quickSports: "⚽ Sports Center",
+    quickA120: "🏫 Room A120",
     mainEntrance: "Main Entrance",
     startPoint: "Main Entrance",
     btnNext: "Next",
@@ -1519,13 +1522,13 @@ const T = {
     btnStartTour: "Start Tour 🚀",
     btnSkipTour: "Skip ⏩",
     tourGuideTag: "🤖 Campy Guided Tour",
-    tourStep1Msg: "👉 Tap '🎭 Conference & Event Hall' for quick access",
-    tourStep2Msg: "👉 Tap '🚪 Main Entrance' to start your route",
-    tourStep3_1: "🪜/🛗/♿ Select route preference here: Stairs, Elevator, or Accessible mode.",
-    tourStep3_2: "🎥 Toggle automatic camera tracking of Campy.",
-    tourStep3_3: "🔄 Restart Campy's movement on this floor.",
-    tourStep3_4: "🏢 Switch between campus building floors.",
-    tourStep3_5: "🎉 Awesome! You are ready to navigate with Campy.",
+    tourStep1Msg: "👉 Tap '🏫 Room A120'",
+    tourStep2Msg: "👉 Tap '🚪 Main Entrance'",
+    tourStep3_1: "🪜/🛗/♿ Tap here to select route mode: Stairs, Elevator, or Accessible paths.",
+    tourStep3_2: "🎥 Tap here to toggle automatic camera tracking of Campy.",
+    tourStep3_3: "🔄 Tap here to restart Campy's movement on this floor.",
+    tourStep3_4: "🏢 Switch between floors to track Campy moving up/down stairs & elevators.",
+    tourStep3_5: "🎉 Awesome! You are fully ready to navigate with Campy.",
     btnTourNext: "Next ➔",
     btnTourFinish: "Finish Tour & Start 🚀"
   }
@@ -1633,14 +1636,14 @@ function applyLangToUI() {
   if (destChips) {
     destChips.className = 'chips-grid';
     destChips.innerHTML = `
+      <div class="quick-card" id="card-dest-a120" onclick="quickDest('A120')">${t.quickA120}</div>
       <div class="quick-card" onclick="quickDest('BAY MESCIT')">${t.quickMescit}</div>
       <div class="quick-card" onclick="quickDest('KIRTASIYE')">${t.quickKirtasiye}</div>
       <div class="quick-card" onclick="quickDest('REVIR')">${t.quickRevir}</div>
       <div class="quick-card" onclick="quickDest('ULUSLARARASI OFİS')">${t.quickIntStudent}</div>
       <div class="quick-card" onclick="quickDest('ÖĞRENCİ İŞLERİ')">${t.quickStudentAffairs}</div>
       <div class="quick-card" onclick="quickDest('KÜTÜPHANE Z1')">${t.quickLibrary}</div>
-      <div class="quick-card" id="card-dest-conference" onclick="quickDest('KONFERANS SALONU')">${t.quickConference}</div>
-      <div class="quick-card" onclick="quickDest('SPOR SALON')">${t.quickSports}</div>
+      <div class="quick-card" onclick="quickDest('KONFERANS SALONU')">${t.quickConference}</div>
     `;
   }
 
@@ -1684,14 +1687,14 @@ function setTourStepFocus(step) {
     const destScreen = document.getElementById('s-dest');
     if (!destScreen) return;
 
-    const confCard = document.getElementById('card-dest-conference');
-    if (confCard) {
-      confCard.classList.add('tour-card-spotlight');
+    const targetCard = document.getElementById('card-dest-a120');
+    if (targetCard) {
+      targetCard.classList.add('tour-card-spotlight');
     }
 
     const allCards = destScreen.querySelectorAll('.quick-card');
     allCards.forEach(card => {
-      if (card !== confCard) {
+      if (card !== targetCard) {
         card.classList.add('tour-step-dimmed');
       }
     });
@@ -1779,7 +1782,7 @@ function updateMapTourStepContent() {
     highlightElement('btn-cam-track');
   } else if (tourSubStep === 3) {
     text = t.tourStep3_3;
-    highlightElement('btn-full-map');
+    highlightElement('btn-restart-path');
   } else if (tourSubStep === 4) {
     text = t.tourStep3_4;
     highlightElement('floor-badge');
@@ -1817,10 +1820,18 @@ function nextMapTourSubStep() {
 }
 
 function highlightElement(id) {
-  document.querySelectorAll('.tour-card-spotlight').forEach(el => el.classList.remove('tour-card-spotlight'));
+  clearTourFocus();
   if (id) {
-    const el = document.getElementById(id);
-    if (el) el.classList.add('tour-card-spotlight');
+    const targetEl = document.getElementById(id);
+    if (targetEl) {
+      targetEl.classList.add('tour-card-spotlight');
+    }
+    const mapElements = document.querySelectorAll('.map-ctrl-btn, .floor-pill, .map-info-card');
+    mapElements.forEach(el => {
+      if (el !== targetEl && !targetEl.contains(el)) {
+        el.classList.add('tour-step-dimmed');
+      }
+    });
   }
 }
 
@@ -2705,6 +2716,11 @@ function startMover(svg) {
 
   function step(ts) {
     if (!robotG.isConnected) return;
+    if (isTourActive) {
+      start = ts;
+      requestAnimationFrame(step);
+      return;
+    }
     if (start === null) start = ts;
 
     const elapsed = ts - start;
