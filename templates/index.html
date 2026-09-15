@@ -625,6 +625,57 @@ html, body {
   box-shadow: 0 4px 12px rgba(6, 182, 212, 0.35);
 }
 
+/* Guided Tour Banner & Tooltip Styling */
+.tour-banner {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  width: calc(100% - 28px);
+  max-width: 420px;
+  background: rgba(14, 22, 38, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 2px solid var(--accent-cyan);
+  border-radius: 20px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 12px 35px rgba(6, 182, 212, 0.35);
+  animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.tour-card-spotlight {
+  outline: 3px solid var(--accent-cyan) !important;
+  box-shadow: 0 0 25px rgba(6, 182, 212, 0.6) !important;
+  animation: pulseSpotlight 1.5s infinite;
+}
+
+@keyframes pulseSpotlight {
+  0%, 100% { outline-color: var(--accent-cyan); }
+  50% { outline-color: #10b981; }
+}
+
+/* Map Screen Guided Tour Modal Box */
+.tour-map-modal {
+  position: absolute;
+  bottom: 85px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 90;
+  width: calc(100% - 32px);
+  max-width: 400px;
+  background: rgba(14, 22, 38, 0.97);
+  backdrop-filter: blur(20px);
+  border: 2px solid var(--accent-cyan);
+  border-radius: 22px;
+  padding: 18px 20px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(6, 182, 212, 0.4);
+  animation: popIn 0.3s ease;
+}
+
 /* Map Canvas Container */
 #map-container {
   flex: 1;
@@ -933,6 +984,68 @@ html, body {
     <!-- Footer Copyright Branding Text (Matching User Reference) -->
     <p class="app-footer-copyright"><span class="union-badge-txt">رابطة الطلبة العرب - جامعة بيروني</span> © 2026</p>
 
+</div>
+
+<!-- ════════════════ SCREEN 1.5: WELCOME & INTERACTIVE TOUR ════════════════ -->
+<div class="screen hide" id="s-welcome">
+  <div class="wizard-card" style="text-align: center; padding: 28px 22px;">
+
+    <!-- Top Header with Back to Language Button -->
+    <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
+      <button class="back-btn" onclick="goScreen('s-welcome', 's-lang')">
+        <span id="btn-back-lang-welc">← Dil Seçimi</span>
+      </button>
+    </div>
+
+    <!-- Animated Mascot Graphic -->
+    <div style="width: 100px; height: 100px; margin: 0 auto 16px; position: relative;">
+      <svg viewBox="0 0 120 120" class="campy-mascot-svg" style="width:100%;height:100%; filter: drop-shadow(0 8px 20px rgba(6,182,212,0.4));">
+        <defs>
+          <linearGradient id="welcCampyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#ffffff" />
+            <stop offset="100%" stop-color="#cbd5e1" />
+          </linearGradient>
+          <linearGradient id="welcBodyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#1e293b" />
+            <stop offset="100%" stop-color="#0f172a" />
+          </linearGradient>
+        </defs>
+        <ellipse cx="60" cy="108" rx="36" ry="6" fill="rgba(0,0,0,0.4)"/>
+        <g>
+          <line x1="60" y1="26" x2="60" y2="13" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round"/>
+          <circle cx="60" cy="11" r="5" fill="#ffffff"/>
+          <rect x="18" y="42" width="10" height="24" rx="5" fill="#ffffff"/>
+          <rect x="92" y="42" width="10" height="24" rx="5" fill="#ffffff"/>
+          <rect x="24" y="24" width="72" height="66" rx="24" fill="url(#welcBodyGrad)" stroke="url(#welcCampyGrad)" stroke-width="4"/>
+          <rect x="32" y="34" width="56" height="38" rx="14" fill="#090d16" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+
+          <!-- Joyful Smiling Face -->
+          <g>
+            <path d="M 42 54 Q 48 46 54 54" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+            <path d="M 66 54 Q 72 46 78 54" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+            <path d="M 50 63 Q 60 70 70 63" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+          </g>
+        </g>
+      </svg>
+    </div>
+
+    <!-- Speech Bubble Container -->
+    <div style="background: rgba(6, 182, 212, 0.12); border: 1.5px solid var(--accent-cyan); border-radius: 18px; padding: 16px 18px; margin-bottom: 22px; position: relative; box-shadow: 0 8px 24px rgba(6, 182, 212, 0.15);">
+      <h2 style="font-size: 20px; font-weight: 800; color: var(--accent-cyan); margin-bottom: 8px;" id="txt-welcome-title">مرحباً بك! أنا كامبي 🤖</h2>
+      <p style="font-size: 14px; line-height: 1.5; color: #ffffff;" id="txt-welcome-speech">أنا مساعدك الذكي داخل الحرم الجامعي! هل تريد القيام بجولة تعليمية سريعة لمعرفة كيفية استخدام المنصة؟</p>
+    </div>
+
+    <!-- Action Choice Buttons -->
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <button class="wizard-btn" id="btn-start-tour" onclick="startGuidedTour()">
+        <span id="txt-btn-start-tour">بدء الجولة 🚀</span>
+      </button>
+      <button class="wizard-btn" id="btn-skip-tour" style="background: rgba(255,255,255,0.08); box-shadow: none; color: var(--text-sub); border: 1.5px solid var(--card-border);" onclick="skipTour()">
+        <span id="txt-btn-skip-tour">تخطي ⏩</span>
+      </button>
+    </div>
+
+    <p class="app-footer-copyright" style="margin-top: 20px;"><span class="union-badge-txt">رابطة الطلبة العرب - جامعة بيروني</span> © 2026</p>
   </div>
 </div>
 
@@ -1227,7 +1340,21 @@ const T = {
     btnBackDestPage: "← اختيار وجهة جديدة",
     modeStairs: "سلالم",
     modeElevator: "مصعد",
-    modeAccessible: "ذوي الاحتياجات"
+    modeAccessible: "ذوي الاحتياجات",
+    welcomeTitle: "مرحباً بك! أنا كامبي 🤖",
+    welcomeSpeech: "أنا مساعدك الذكي داخل الحرم الجامعي! هل تريد القيام بجولة تعليمية سريعة لمعرفة كيفية استخدام المنصة؟",
+    btnStartTour: "بدء الجولة 🚀",
+    btnSkipTour: "تخطي ⏩",
+    tourGuideTag: "🤖 جولة كامبي التعليمية",
+    tourStep1Msg: "👉 اضغط على '🎭 قاعة المؤتمرات' أو اختر أي مكان كوجهة لتجربة الجولة",
+    tourStep2Msg: "👉 اضغط على '🚪 المدخل الرئيسي' لتحديده كموقع انطلاقك الحالي",
+    tourStep3_1: "🪜/🛗/♿ من هذا الزر يمكنك اختيار طريقة التنقل: السلالم، المصعد، أو مسارات ذوي الاحتياجات.",
+    tourStep3_2: "🎥 هذا الزر يفعل أو يوقف تعقب الكاميرا التلقائي لحركتي أثناء الملاحة.",
+    tourStep3_3: "🔄 هذا الزر يعيد تشغيل حركتي من بداية الطريق على هذا الطابق.",
+    tourStep3_4: "🏢 من هنا يمكنك التبديل بين طوابق المبنى لمعاينة المسار في كل طابق.",
+    tourStep3_5: "🎉 رائع جداً! أنت الآن محترف وجاهز لاستخدام كامبي بكل سهولة.",
+    btnTourNext: "التالي ➔",
+    btnTourFinish: "إنهاء الجولة وبدء الاستخدام 🚀"
   },
   tr: {
     unionBadge: "Biruni Üniversitesi Arap Öğrenciler Birliği",
@@ -1278,7 +1405,21 @@ const T = {
     btnBackDestPage: "← Yeni Hedef Seç",
     modeStairs: "Merdiven",
     modeElevator: "Asansör",
-    modeAccessible: "Engelsiz"
+    modeAccessible: "Engelsiz",
+    welcomeTitle: "Hoş geldin! Ben Campy 🤖",
+    welcomeSpeech: "Kampüs içi akıllı asistanınızım! Platformun nasıl kullanılacağını öğrenmek için hızlı bir tur yapmak ister misiniz?",
+    btnStartTour: "Turu Başlat 🚀",
+    btnSkipTour: "Atla ⏩",
+    tourGuideTag: "🤖 Campy Rehber Turu",
+    tourStep1Msg: "👉 Turu denemek için '🎭 Konferans Salonu' veya herhangi bir mekan seçin",
+    tourStep2Msg: "👉 Başlangıç noktanız olarak '🚪 Ana Giriş' seçeneğine dokunun",
+    tourStep3_1: "🪜/🛗/♿ Buradan ulaşım türünü seçin: Merdiven, Asansör veya Engelsiz mod.",
+    tourStep3_2: "🎥 Bu buton haritanın Campy'yi otomatik takip etmesini açar/kapatır.",
+    tourStep3_3: "🔄 Bu buton Campy'nin hareketini bu kattan yeniden başlatır.",
+    tourStep3_4: "🏢 Buradan binanın katları arasında geçiş yapabilirsiniz.",
+    tourStep3_5: "🎉 Harika! Artık Campy'yi kullanmaya tamamen hazırsınız.",
+    btnTourNext: "İleri ➔",
+    btnTourFinish: "Turu Bitir ve Başla 🚀"
   },
   en: {
     unionBadge: "Biruni University Arab Students Association",
@@ -1287,70 +1428,13 @@ const T = {
     destIntro: "Type room code or select popular destination",
     whereFrom: "Where are you right now?",
     originIntro: "Select current location or use main entrance",
-    lblDest: "Destination Room / Spot",
-    lblOrigin: "Your Current Location",
-    destPlaceholder: "e.g. A120, B205, AZ05...",
-    quickLabel: "Quick Access & Key Locations",
-    quickMescit: "🕌 Prayer Room & Mosque",
-    quickKirtasiye: "✏️ Stationery & Print Center",
-    quickRevir: "🩺 Medical Clinic & Emergency",
-    quickIntStudent: "🎓 International Student Affairs",
-    quickStudentAffairs: "🏛️ General Student Affairs",
-    quickLibrary: "📚 Central Library",
-    quickConference: "🎭 Conference & Events Hall",
-    quickSports: "⚽ Sports Hall & Gym",
-    mainEntrance: "Main Entrance",
-    startPoint: "Main Entrance",
-    btnNext: "Next",
-    btnStartNav: "Start Navigation",
-    backLang: "← Language",
-    backDest: "← Destination",
-    distance: "Distance",
-    time: "Est. Time",
-    goToFloor: "Go to",
-    viaStairs: "Via Stairs 🪜",
-    viaElevator: "Via Elevator 🛗",
-    viaEscalator: "Via Escalator ⚡",
-    floor0: "Ground Floor",
-    floor1: "Floor 1",
-    floor2: "Floor 2",
-    floor3: "Floor 3",
-    floorNeg1: "Floor -1",
-    floorNeg2: "Floor -2",
-    floorNeg3: "Floor -3",
-    reStart: "Recalculate",
-    calculating: "Calculating shortest route...",
-    errorNoRoute: "Location not found or no route available.",
-    drawerQuickText: "⚙️ Edit Route / Settings",
-    home: "Home",
-    arrived: "You have arrived! 🎉",
-    placeholderEditDest: "Change Destination (e.g. A120, B205...)",
-    placeholderEditOrigin: "Change Location (e.g. Main Entrance...)",
-    btnBackDestPage: "← Choose New Destination",
-    modeStairs: "Stairs",
-    modeElevator: "Elevator",
-    modeAccessible: "Accessible"
-  }
-};
-
-let lang = 'ar';
-let MEKANLAR = [];
-let routeData = null;
-let currentFloorIdx = 0;
-let pzInstance = null;
-
-// Fetch places list on boot
-fetch('/api/mekanlar').then(r => r.json()).then(d => {
-  MEKANLAR = d.mekanlar || [];
-}).catch(e => console.log('Mekanlar yukleme hatasi', e));
-
-// ════════════════ LANGUAGE LOGIC ════════════════
+    lblDe// ════════════════ LANGUAGE LOGIC ════════════════
 function pickLang(l) {
   lang = l;
   document.documentElement.lang = l;
   document.body.dir = (l === 'ar') ? 'rtl' : 'ltr';
   applyLangToUI();
-  goScreen('s-lang', 's-dest');
+  goScreen('s-lang', 's-welcome');
 }
 
 function getFloorLabel(kat) {
@@ -1379,6 +1463,18 @@ function getFloorLabel(kat) {
 function applyLangToUI() {
   const t = T[lang];
   document.querySelectorAll('.union-badge-txt').forEach(el => el.textContent = t.unionBadge);
+
+  // Screen 1.5: Welcome
+  const welcTitle = document.getElementById('txt-welcome-title');
+  if (welcTitle) welcTitle.textContent = t.welcomeTitle;
+  const welcSpeech = document.getElementById('txt-welcome-speech');
+  if (welcSpeech) welcSpeech.textContent = t.welcomeSpeech;
+  const btnStartTour = document.getElementById('txt-btn-start-tour');
+  if (btnStartTour) btnStartTour.textContent = t.btnStartTour;
+  const btnSkipTour = document.getElementById('txt-btn-skip-tour');
+  if (btnSkipTour) btnSkipTour.textContent = t.btnSkipTour;
+  const btnBackLangWelc = document.getElementById('btn-back-lang-welc');
+  if (btnBackLangWelc) btnBackLangWelc.textContent = t.backLang;
 
   // Screen 2: Destination
   const destTitle = document.getElementById('dest-title');
@@ -1428,17 +1524,137 @@ function applyLangToUI() {
   if (editDest) editDest.placeholder = t.placeholderEditDest;
   const editOrigin = document.getElementById('edit-origin');
   if (editOrigin) editOrigin.placeholder = t.placeholderEditOrigin;
+}
 
-  // Update Floor Pills in Map if active
-  if (routeData && routeData.asamalar && routeData.asamalar.length > 0) {
-    const badgeContainer = document.getElementById('floor-badge');
-    if (badgeContainer && routeData.asamalar.length > 1) {
-      badgeContainer.innerHTML = routeData.asamalar.map((s, i) => {
-        const lbl = getFloorLabel(s.kat);
-        return `<div class="floor-pill ${(i === currentFloorIdx) ? 'active' : ''}" onclick="showFloorMap(${i})">${lbl}</div>`;
-      }).join('');
-    }
+// ════════════════ INTERACTIVE GUIDED TOUR ENGINE ════════════════
+let isTourActive = false;
+let tourStep = 0;
+let tourSubStep = 1;
+
+function startGuidedTour() {
+  isTourActive = true;
+  tourStep = 1;
+  tourSubStep = 1;
+  applyLangToUI();
+  goScreen('s-welcome', 's-dest');
+  showTourBanner(T[lang].tourStep1Msg);
+}
+
+function skipTour() {
+  isTourActive = false;
+  tourStep = 0;
+  hideTourBanner();
+  goScreen('s-welcome', 's-dest');
+}
+
+function showTourBanner(msg) {
+  let b = document.getElementById('tour-banner');
+  if (!b) {
+    b = document.createElement('div');
+    b.id = 'tour-banner';
+    b.className = 'tour-banner';
+    document.body.appendChild(b);
   }
+  b.style.display = 'flex';
+  b.innerHTML = `
+    <div style="font-size: 24px; flex-shrink: 0;">🤖</div>
+    <div style="flex: 1; font-size: 13.5px; font-weight: 700; color: #ffffff; line-height: 1.4;">${msg}</div>
+  `;
+}
+
+function hideTourBanner() {
+  const b = document.getElementById('tour-banner');
+  if (b) b.style.display = 'none';
+}
+
+function showMapTourModal() {
+  let m = document.getElementById('tour-map-modal');
+  if (!m) {
+    m = document.createElement('div');
+    m.id = 'tour-map-modal';
+    m.className = 'tour-map-modal';
+    const sMap = document.getElementById('s-map');
+    if (sMap) sMap.appendChild(m);
+  }
+  m.style.display = 'block';
+  updateMapTourStepContent();
+}
+
+function hideMapTourModal() {
+  const m = document.getElementById('tour-map-modal');
+  if (m) m.style.display = 'none';
+}
+
+function updateMapTourStepContent() {
+  const m = document.getElementById('tour-map-modal');
+  if (!m) return;
+  const t = T[lang];
+
+  let text = '';
+  let isLast = false;
+
+  if (tourSubStep === 1) {
+    text = t.tourStep3_1;
+    highlightElement('btn-mode-float');
+  } else if (tourSubStep === 2) {
+    text = t.tourStep3_2;
+    highlightElement('btn-cam-track');
+  } else if (tourSubStep === 3) {
+    text = t.tourStep3_3;
+    highlightElement('btn-full-map');
+  } else if (tourSubStep === 4) {
+    text = t.tourStep3_4;
+    highlightElement('floor-badge');
+  } else if (tourSubStep === 5) {
+    text = t.tourStep3_5;
+    isLast = true;
+    highlightElement(null);
+  }
+
+  m.innerHTML = `
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+      <span style="font-size: 28px;">🤖</span>
+      <div>
+        <div style="font-size: 11px; font-weight: 800; color: var(--accent-cyan); text-transform: uppercase;">${t.tourGuideTag} (${tourSubStep}/5)</div>
+        <div style="font-size: 14px; font-weight: 700; color: #ffffff; margin-top: 2px;">${text}</div>
+      </div>
+    </div>
+    <div style="display: flex; justify-content: flex-end; margin-top: 14px;">
+      ${isLast ? `
+        <button class="wizard-btn" style="height: 42px; font-size: 13.5px;" onclick="endGuidedTour()">${t.btnTourFinish}</button>
+      ` : `
+        <button class="wizard-btn" style="height: 40px; width: auto; padding: 0 20px; font-size: 13.5px;" onclick="nextMapTourSubStep()">${t.btnTourNext}</button>
+      `}
+    </div>
+  `;
+}
+
+function nextMapTourSubStep() {
+  tourSubStep++;
+  if (tourSubStep > 5) {
+    endGuidedTour();
+  } else {
+    updateMapTourStepContent();
+  }
+}
+
+function highlightElement(id) {
+  document.querySelectorAll('.tour-card-spotlight').forEach(el => el.classList.remove('tour-card-spotlight'));
+  if (id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('tour-card-spotlight');
+  }
+}
+
+function endGuidedTour() {
+  isTourActive = false;
+  tourStep = 0;
+  tourSubStep = 1;
+  hideTourBanner();
+  hideMapTourModal();
+  highlightElement(null);
+  resetToHome();
+}
 
   // Destination Quick Cards
   const destChips = document.getElementById('dest-chips');
@@ -1476,10 +1692,17 @@ function goScreen(fromId, toId) {
 function goToOrigin() {
   const dest = document.getElementById('inp-dest').value.trim();
   if (!dest) return;
+  if (isTourActive) {
+    tourStep = 2;
+    showTourBanner(T[lang].tourStep2Msg);
+  }
   goScreen('s-dest', 's-origin');
 }
 
 function resetToHome() {
+  hideTourBanner();
+  hideMapTourModal();
+  highlightElement(null);
   document.getElementById('s-map').classList.remove('active');
   document.getElementById('s-origin').classList.add('hide');
   document.getElementById('s-dest').classList.remove('hide');
@@ -1916,6 +2139,11 @@ async function startRoute() {
 
     renderDrawerContent(d);
     showFloorMap(0);
+
+    if (isTourActive) {
+      hideTourBanner();
+      setTimeout(showMapTourModal, 400);
+    }
 
     // Auto Collapse Drawer after short preview
     setTimeout(() => {
