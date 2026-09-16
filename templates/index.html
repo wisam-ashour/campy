@@ -1371,6 +1371,7 @@ const T = {
     quickSports: "⚽ الصالة الرياضية والملعب",
     quickA120: "🏫 قاعة A120",
     mainEntrance: "المدخل الرئيسي",
+    backEntrance: "المدخل الخلفي",
     startPoint: "المدخل الرئيسي",
     btnNext: "التالي",
     btnStartNav: "بدء التوجيه والمسار",
@@ -1437,6 +1438,7 @@ const T = {
     quickSports: "⚽ Spor Salonu & Saha",
     quickA120: "🏫 A120 Dersliği",
     mainEntrance: "Ana Giriş",
+    backEntrance: "Arka Giriş",
     startPoint: "Ana Giriş",
     btnNext: "İleri",
     btnStartNav: "Navigasyonu Başlat",
@@ -1502,6 +1504,7 @@ const T = {
     quickSports: "⚽ Sports Center",
     quickA120: "🏫 Room A120",
     mainEntrance: "Main Entrance",
+    backEntrance: "Back Entrance",
     startPoint: "Main Entrance",
     btnNext: "Next",
     btnStartNav: "Start Navigation",
@@ -1666,7 +1669,8 @@ function applyLangToUI() {
   const originChips = document.getElementById('origin-chips');
   if (originChips) {
     originChips.innerHTML = `
-      <div class="chip" id="card-origin-main" onclick="quickOrigin('START_POINT')">${t.startPoint}</div>
+      <div class="chip" id="card-origin-main" onclick="quickOrigin('ANA GİRİŞ')">🚪 ${t.mainEntrance}</div>
+      <div class="chip" id="card-origin-back" onclick="quickOrigin('ARKA KAPI')">🚪 ${t.backEntrance}</div>
     `;
   }
 }
@@ -2029,6 +2033,23 @@ const SEARCH_ALIASES = [
     target: 'B CAFE',
     aliases: ['b cafe', 'b كافيه'],
     label: { ar: '☕ B كافيه', tr: '☕ B Kafe', en: '☕ B Cafe' }
+  },
+  {
+    target: 'ID KAFE',
+    aliases: ['id kafe', 'id cafe', 'إيد كافيه', 'ايد كافيه', 'كافيه ايد', 'كافيه إيد'],
+    label: { ar: '☕ ID كافيه', tr: '☕ ID Kafe', en: '☕ ID Cafe' }
+  },
+
+  // Entrances / المداخل
+  {
+    target: 'ANA GİRİŞ',
+    aliases: ['المدخل الرئيسي', 'مدخل رئيسي', 'المدخل', 'مدخل', 'الباب الرئيسي', 'ana giris', 'ana giriş', 'main entrance', 'entrance', 'start_point'],
+    label: { ar: '🚪 المدخل الرئيسي (Ana Giriş)', tr: '🚪 Ana Giriş', en: '🚪 Main Entrance' }
+  },
+  {
+    target: 'ARKA KAPI',
+    aliases: ['المدخل الخلفي', 'مدخل خلفي', 'الباب الخلفي', 'arka kapi', 'arka kapı', 'back entrance', 'rear entrance'],
+    label: { ar: '🚪 المدخل الخلفي (Arka Giriş)', tr: '🚪 Arka Kapı', en: '🚪 Back Entrance' }
   },
 
   // Financial Affairs / الشؤون المالية

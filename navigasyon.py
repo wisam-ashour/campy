@@ -183,8 +183,11 @@ def kat_yukle(kat_adi, dxf_yolu):
         "bounds": {"min_x": min_x, "min_y": min_y, "max_x": max_x, "max_y": max_y},
     }
 
-    if "START_POINT" in rooms:
-        _BASLANGIC_KAT = kat_adi
+    for rm in rooms:
+        u_rm = rm.upper()
+        if "START_POINT" in u_rm or "ANA GİRİŞ" in u_rm or "ANA GIRIS" in u_rm or "GİRİŞ" in u_rm or "GIRIS" in u_rm:
+            _BASLANGIC_KAT = kat_adi
+            break
 
     return len(rooms), graf.number_of_nodes()
 
@@ -219,11 +222,28 @@ def _norm_mekan_ad(s):
     return s
 
 
+def _varsayilan_baslangic():
+    """Varsayılan başlangıç noktasını bulur (ANA GİRİŞ, START_POINT vb.)."""
+    _otomatik_yukle_if_empty()
+    for kat, data in _KATLAR.items():
+        for rm in data["rooms"]:
+            u_rm = rm.upper()
+            if "ANA GİRİŞ" in u_rm or "ANA GIRIS" in u_rm or "START_POINT" in u_rm:
+                return rm
+    for kat, data in _KATLAR.items():
+        for rm in data["rooms"]:
+            if "GİRİŞ" in rm.upper() or "GIRIS" in rm.upper():
+                return rm
+    return "ANA GİRİŞ"
+
+
 def _gercek_mekan_ad(ad):
-    """Mekân adını katlardaki tam DWG ismiyle eşleştirir (esnek Türkçe/İngilizce harف duyarlılığı)."""
+    """Mekân adını katlardaki tam DWG ismiyle eşleştirir (esnek Türkçe/İngilizce harf duyarlılığı)."""
     _otomatik_yukle_if_empty()
     if not ad:
-        return ad
+        return _varsayilan_baslangic()
+    if ad.upper() in ["START_POINT", "START", "DEFAULT"]:
+        return _varsayilan_baslangic()
     for kat, veri in _KATLAR.items():
         if ad in veri["rooms"]:
             return ad

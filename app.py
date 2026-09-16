@@ -76,8 +76,8 @@ def rota():
 
     if not hedef:
         return jsonify({"durum": "hata", "mesaj": "hedef_yok"})
-    if not baslangic:
-        baslangic = "START_POINT"
+    if not baslangic or baslangic.upper() in ["START_POINT", "START", "DEFAULT"]:
+        baslangic = nav._varsayilan_baslangic()
     if baslangic == hedef:
         return jsonify({"durum": "hata", "mesaj": "ayni_yer"})
 
