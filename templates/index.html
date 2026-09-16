@@ -3140,35 +3140,43 @@ function closeFeedbackModal(e) {
 async function submitFeedback() {
   const txt = document.getElementById('txt-feedback-input');
   const msg = document.getElementById('feedback-status-msg');
-  const t = T[lang] || T['tr'];
+  const t = T[lang] || T['ar'];
   const mesaj = txt ? txt.value.trim() : '';
 
   if (!mesaj) {
     if (msg) {
       msg.style.color = '#ef4444';
-      msg.textContent = t.feedbackError || 'Lütfen bir mesaj yazın.';
+      msg.textContent = t.feedbackError || 'يرجى كتابة الملاحظة قبل الإرسال.';
     }
     return;
   }
 
   const btn = document.getElementById('btn-send-feedback');
   if (btn) btn.disabled = true;
+  if (msg) {
+    msg.style.color = '#38bdf8';
+    msg.textContent = (lang === 'ar') ? 'جاري الإرسال...' : (lang === 'tr' ? 'Gönderiliyor...' : 'Sending...');
+  }
 
   try {
+    const currentKat = (typeof routeData !== 'undefined' && routeData && routeData.kat) ? routeData.kat : '';
     const resp = await fetch('/api/geribildirim', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         mesaj: mesaj,
         dil: lang,
-        kat: (currentRouteData ? currentRouteData.kat : '')
+        kat: currentKat
       })
     });
+    if (!resp.ok) {
+      throw new Error(`HTTP ${resp.status}`);
+    }
     const res = await resp.json();
     if (res.durum === 'ok') {
       if (msg) {
         msg.style.color = '#10b981';
-        msg.textContent = t.feedbackSuccess || 'Geri bildiriminiz alındı.';
+        msg.textContent = t.feedbackSuccess || 'شكرًا لك! تم إرسال ملاحظتك بنجاح.';
       }
       if (txt) txt.value = '';
       setTimeout(() => {
@@ -3178,14 +3186,15 @@ async function submitFeedback() {
     } else {
       if (msg) {
         msg.style.color = '#ef4444';
-        msg.textContent = 'Bir hata oluştu.';
+        msg.textContent = (lang === 'ar') ? 'حدث خطأ أثناء حفظ الملاحظة.' : 'Bir hata oluştu.';
       }
       if (btn) btn.disabled = false;
     }
   } catch (err) {
+    console.error('Feedback submit error:', err);
     if (msg) {
       msg.style.color = '#ef4444';
-      msg.textContent = 'Bağlantı hatası.';
+      msg.textContent = (lang === 'ar') ? '⚠️ تعذر الإرسال، يرجى التحديث وإعادة المحاولة.' : (lang === 'tr' ? '⚠️ Gönderilemedi, lütfen sayfayı yenileyip tekrar deneyin.' : '⚠️ Connection error, please try again.');
     }
     if (btn) btn.disabled = false;
   }
