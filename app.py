@@ -30,10 +30,16 @@ print(f"Toplam: {len(nav.tum_mekanlar())} mekan")
 
 app = Flask(__name__)
 
+KAYIT_GERIBILDIRIM = os.path.join(KAYIT_DIR, "geribildirim.csv")
+
 os.makedirs(KAYIT_DIR, exist_ok=True)
 if not os.path.exists(KAYIT_DOSYA):
     with open(KAYIT_DOSYA, "w", newline="", encoding="utf-8") as f:
         csv.writer(f).writerow(["zaman", "baslangic", "hedef", "sonuc"])
+
+if not os.path.exists(KAYIT_GERIBILDIRIM):
+    with open(KAYIT_GERIBILDIRIM, "w", newline="", encoding="utf-8-sig") as f:
+        csv.writer(f).writerow(["zaman", "dil", "kat", "mesaj"])
 
 
 def _kaydet(baslangic, hedef, sonuc):
@@ -46,6 +52,32 @@ def _kaydet(baslangic, hedef, sonuc):
             ])
     except Exception:
         pass   # kayıt tutulamazsa servis durmasın
+
+
+@app.route("/api/geribildirim", methods=["POST"])
+def geribildirim():
+    """Öğrencilerin harita/сайт hakkında bıraktığı geribildirimleri Excel/CSV dosyasına kaydeder."""
+    veri = request.get_json() or {}
+    mesaj = (veri.get("mesaj") or "").strip()
+    dil = (veri.get("dil") or "tr").strip()
+    kat = (veri.get("kat") or "").strip()
+
+    if not mesaj:
+        return jsonify({"durum": "hata", "mesaj": "mesaj_bos"})
+
+    try:
+        with open(KAYIT_GERIBILDIRIM, "a", newline="", encoding="utf-8-sig") as f:
+            csv.writer(f).writerow([
+                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                dil,
+                kat,
+                mesaj,
+            ])
+    except Exception as e:
+        print(f"Geri bildirim kayit hatasi: {e}")
+        return jsonify({"durum": "hata", "mesaj": "kayit_basarisiz"})
+
+    return jsonify({"durum": "ok", "mesaj": "kaydedildi"})
 
 
 @app.route("/")
