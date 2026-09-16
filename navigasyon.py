@@ -237,13 +237,20 @@ def _varsayilan_baslangic():
     return "ANA GİRİŞ"
 
 
-def _gercek_mekan_ad(ad):
+def _gercek_mekan_ad(ad, pref_kat=None):
     """Mekân adını katlardaki tam DWG ismiyle eşleştirir (esnek Türkçe/İngilizce harf duyarlılığı)."""
     _otomatik_yukle_if_empty()
     if not ad:
         return _varsayilan_baslangic()
     if ad.upper() in ["START_POINT", "START", "DEFAULT"]:
         return _varsayilan_baslangic()
+    if pref_kat and pref_kat in _KATLAR:
+        if ad in _KATLAR[pref_kat]["rooms"]:
+            return ad
+        norm_t = _norm_mekan_ad(ad)
+        for rm in _KATLAR[pref_kat]["rooms"]:
+            if _norm_mekan_ad(rm) == norm_t:
+                return rm
     for kat, veri in _KATLAR.items():
         if ad in veri["rooms"]:
             return ad
@@ -260,9 +267,11 @@ def _gercek_mekan_ad(ad):
     return ad
 
 
-def mekan_kati(ad):
-    """Bir mekânın hangi katta olduğunu bulur (önce koda bakar, sonra esnek isim arar)."""
-    ad_gercek = _gercek_mekan_ad(ad)
+def mekan_kati(ad, pref_kat=None):
+    """Bir mekânın hangi katta olduğunu bulur (önce tercih edilen kata/koda bakar, sonra esnek isim arar)."""
+    ad_gercek = _gercek_mekan_ad(ad, pref_kat=pref_kat)
+    if pref_kat and pref_kat in _KATLAR and ad_gercek in _KATLAR[pref_kat]["rooms"]:
+        return pref_kat
     kod_kat = kat_bul(ad_gercek)
     if kod_kat and kod_kat in _KATLAR and ad_gercek in _KATLAR[kod_kat]["rooms"]:
         return kod_kat
@@ -516,39 +525,42 @@ def _en_yakin_wc(baslangic_ad, wc_type):
     for kat, rm in candidates:
         if kat == bas_kat and baslangic_ad in _KATLAR[bas_kat]["rooms"]:
             d_list, m = _yol(kat, baslangic_ad, rm)
-            if d_list and m < min_dist:
+            if d_list is not None and m < min_dist:
                 min_dist = m
-                best_cand = rm
+                best_cand = (kat, rm)
         else:
             pos_b = _KATLAR[bas_kat]["rooms"].get(baslangic_ad, (0, 0)) if bas_kat in _KATLAR else (0, 0)
             pos_r = _KATLAR[kat]["rooms"].get(rm, (0, 0))
             m = _mesafe(pos_b, pos_r) + (abs(_kat_degeri(bas_kat) - _kat_degeri(kat)) * 20.0)
             if m < min_dist:
                 min_dist = m
-                best_cand = rm
+                best_cand = (kat, rm)
 
-    return best_cand or candidates[0][1]
+    return best_cand or candidates[0]
 
 
 def rota(hedef_ad, baslangic_ad="START_POINT", tercih="MERDIVEN"):
     """Herhangi bir mekândan herhangi bir mekâna rota.
     Aynı kattaysa tek harita, farklı kattaysa merdiven/asansör üzerinden iki aşama."""
     _otomatik_yukle_if_empty()
-    baslangic_ad = _gercek_mekan_ad(baslangic_ad)
+    bas_kat = mekan_kati(baslangic_ad)
+    baslangic_ad = _gercek_mekan_ad(baslangic_ad, pref_kat=bas_kat)
+    if bas_kat is None:
+        bas_kat = mekan_kati(baslangic_ad)
 
     # Generic WC request handling: find closest WC to student's current floor/location
     u_h = (hedef_ad or "").upper()
+    wc_target_kat = None
     if "WC" in u_h or any(k in u_h for k in ["HAMAM", "TOALET", "RESTROOM", "BATHROOM", "TUALET"]):
-        en_yakin = _en_yakin_wc(baslangic_ad, hedef_ad)
-        if en_yakin:
-            hedef_ad = en_yakin
+        res = _en_yakin_wc(baslangic_ad, hedef_ad)
+        if res:
+            wc_target_kat, hedef_ad = res
 
-    hedef_ad = _gercek_mekan_ad(hedef_ad)
-    hedef_kat = mekan_kati(hedef_ad)
-    bas_kat = mekan_kati(baslangic_ad)
+    hedef_ad = _gercek_mekan_ad(hedef_ad, pref_kat=wc_target_kat or bas_kat)
+    hedef_kat = wc_target_kat or mekan_kati(hedef_ad, pref_kat=bas_kat)
     if hedef_kat is None or bas_kat is None:
         return None
-    if hedef_ad == baslangic_ad:
+    if hedef_ad == baslangic_ad and hedef_kat == bas_kat:
         return None
 
     # --- aynı kat ---
