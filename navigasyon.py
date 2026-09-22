@@ -6,6 +6,7 @@ Her kat ayrı DXF. Kat geçişi merdiven/asansör üzerinden yapılır
 """
 
 import math
+import os
 import re
 
 import ezdxf
@@ -651,7 +652,23 @@ def _multi_floor_route(bas_kat, baslangic_ad, hedef_kat, hedef_ad, tercih="MERDI
                     elif tercih in ["MERDİVEN", "MERDIVEN"] and ("ASANSÖR" in u_gecis or "ASANSOR" in u_gecis):
                         pref_penalty = 25.0
 
-                    weight = (base_w * dist_floors) + block_penalty + pref_penalty
+                    # Overshoot Penalty: Öncesinde bulunulan veya hedeflenen طابق'ı aşan gereksiz صعود/هبوط الممر المغلوط
+                    overshoot_penalty = 0.0
+                    v_start = _kat_degeri(bas_kat)
+                    v_target = _kat_degeri(hedef_kat)
+                    v1 = _kat_degeri(k1)
+                    v2 = _kat_degeri(k2)
+
+                    if v_start <= v_target:
+                        if v2 > v_target or (v1 > v_start and v2 > v1):
+                            overshoot_penalty = 1000.0
+                    if v_start >= v_target:
+                        if v2 < v_target:
+                            overshoot_penalty = 1000.0
+                        elif v1 <= 0 and v2 > v1 and is_esc:
+                            overshoot_penalty = 1000.0
+
+                    weight = (base_w * dist_floors) + block_penalty + pref_penalty + overshoot_penalty
                     G.add_edge((k1, gecis_ad), (k2, gecis_ad), weight=weight)
 
     # أي طالب في طابق أعلى من أو يساوي -1 يتجه إلى kat-3 يُمنع عنه السلالم العادية المتصلة بـ kat-3 ويُجبر على الدرج الكهربائي
